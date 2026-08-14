@@ -394,6 +394,7 @@
             animation: snowFall 8s linear infinite;
             pointer-events: none;
             opacity: 0.6;
+            z-index: 1;
         }
 
         @keyframes snowFall {
@@ -446,7 +447,7 @@
             float: right;
             transition: opacity 0.2s;
             position: relative;
-            z-index: 2;
+            z-index: 5;
         }
 
         .btn-close:hover {
@@ -506,8 +507,8 @@
     <div class="petal-container" id="petalContainer"></div>
 
     <!-- Audio Background: Yiruma - River Flows In You (Bahagian Chorus bermula minit ke-30 / 30s) -->
+    <!-- Background music: guna Web Audio generated (Yiruma link mati) -->
     <audio id="bgMusic" loop>
-        <source src="https://cdns.jukehost.co.uk/N2r5q8w2m1k4" type="audio/mpeg">
         Your browser does not support the audio element.
     </audio>
 
@@ -527,10 +528,18 @@
             <div class="corner-controls">
                 <button class="control-btn" id="musicToggleBtn" onclick="toggleMusic()" title="Play/Pause Muzik">🎵</button>
                 <button class="control-btn" onclick="openSettings()" title="Tetapan">⚙️</button>
+                <button class="control-btn" onclick="openAddLetter()" title="Tambah Surat Sendiri">➕</button>
+                <button class="control-btn" onclick="surpriseMe()" title="Surprise Me!">🎲</button>
             </div>
 
             <h2 id="txtDashTitle">Open When...</h2>
             <p class="subtitle" id="txtDashSub">Sentuh mana-mana sampul surat untuk membaca warkah</p>
+            <div style="margin-bottom:18px;">
+                <div style="font-size:12px; opacity:0.7; margin-bottom:4px;">Warkah dibuka: <span id="progressText">0/0</span></div>
+                <div style="height:8px; background:rgba(224,169,109,0.2); border-radius:10px; overflow:hidden;">
+                    <div id="progressBar" style="height:100%; width:0%; background:linear-gradient(90deg,#e0a96d,#ffb703); transition:width 0.5s;"></div>
+                </div>
+            </div>
 
             <div class="categories-container">
                 <!-- KATEGORI 1 -->
@@ -680,6 +689,9 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Kategori surat custom -->
+            <div class="categories-container" id="customLettersContainer" style="max-height:none;"></div>
         </div>
     </div>
 
@@ -708,6 +720,56 @@
                 </select>
             </div>
             <button class="btn-close" id="txtSaveClose" style="width:100%; float:none;" onclick="closeSettings()">Simpan & Tutup</button>
+            <hr style="border-color:rgba(224,169,109,0.2); margin:15px 0;">
+            <button class="btn-close" style="width:100%; float:none; background:#3a7bd5; margin-top:6px;" onclick="exportLetters()">📤 Export Surat</button>
+            <button class="btn-close" style="width:100%; float:none; background:#3a7bd5; margin-top:6px;" onclick="document.getElementById('importFile').click()">📥 Import Surat</button>
+            <input type="file" id="importFile" accept="application/json" style="display:none;" onchange="importLetters(this)">
+            <button class="btn-close" style="width:100%; float:none; background:#b03a48; margin-top:6px;" onclick="resetAllLetters()">🗑️ Reset Semua</button>
+        </div>
+    </div>
+
+    <!-- 5. MODAL TAMBAH SURAT SENDIRI -->
+    <div class="settings-modal" id="addLetterModal">
+        <div class="settings-content" style="width:380px; max-height:85vh; overflow-y:auto;">
+            <h3 style="color: var(--accent-gold); margin-top:0;">✍️ Tulis Warkah Sendiri</h3>
+            <div class="setting-item" style="display:block;">
+                <label style="font-size:13px;">Tajuk Surat</label>
+                <input type="text" id="newLetterTitle" placeholder="cth: Open When You Rindu..." style="width:100%; margin-top:5px; padding:8px; border-radius:8px; border:1px solid #e0a96d; background:#0b132b; color:#fdf0d5;">
+            </div>
+            <div class="setting-item" style="display:block;">
+                <label style="font-size:13px;">Isi Warkah</label>
+                <textarea id="newLetterText" rows="5" placeholder="Tulis apa sahaja..." style="width:100%; margin-top:5px; padding:8px; border-radius:8px; border:1px solid #e0a96d; background:#0b132b; color:#fdf0d5; font-family:'Poppins';"></textarea>
+            </div>
+            <div class="setting-item" style="display:block;">
+                <label style="font-size:13px;">Gambar (pilihan)</label>
+                <input type="file" id="newLetterImg" accept="image/*" style="margin-top:5px; color:#fdf0d5; font-size:12px;">
+            </div>
+            <div class="setting-item" style="display:block;">
+                <label style="font-size:13px;">🎭 Emosi (untuk muzik)</label>
+                <select id="newLetterMood" style="width:100%; margin-top:5px; padding:8px; border-radius:8px; border:1px solid #e0a96d; background:#0b132b; color:#fdf0d5;">
+                    <option value="default">Biasa</option>
+                    <option value="happy">😊 Happy (muzik ceria)</option>
+                    <option value="sad">😢 Sad (muzik sedih)</option>
+                    <option value="miss">💭 Rindu (muzik sedih)</option>
+                </select>
+            </div>
+            <div class="setting-item" style="display:block;">
+                <label style="font-size:13px;">🔒 Surat Private (kunci kata laluan)</label>
+                <input type="password" id="newLetterPass" placeholder="kosongkan jika tak private" style="width:100%; margin-top:5px; padding:8px; border-radius:8px; border:1px solid #e0a96d; background:#0b132b; color:#fdf0d5;">
+            </div>
+            <button class="btn-close" id="saveCustomBtn" style="width:100%; float:none; margin-top:10px; background:var(--accent-gold);" onclick="saveCustomLetter()">Simpan Warkah</button>
+            <button class="btn-close" style="width:100%; float:none; margin-top:8px; background:#6c757d;" onclick="closeAddLetter()">Batal</button>
+        </div>
+    </div>
+
+    <!-- 6. MODAL KATA LALUAN (private letter) -->
+    <div class="settings-modal" id="passModal">
+        <div class="settings-content" style="width:320px;">
+            <h3 style="color: var(--accent-gold); margin-top:0;">🔒 Surat Private</h3>
+            <p style="font-size:13px; opacity:0.8;">Masukkan kata laluan untuk membuka warkah ini.</p>
+            <input type="password" id="passInput" placeholder="Kata laluan" style="width:100%; padding:8px; border-radius:8px; border:1px solid #e0a96d; background:#0b132b; color:#fdf0d5;">
+            <button class="btn-close" style="width:100%; float:none; margin-top:12px; background:var(--accent-gold);" onclick="verifyPass()">Buka</button>
+            <button class="btn-close" style="width:100%; float:none; margin-top:8px; background:#6c757d;" onclick="closePass()">Batal</button>
         </div>
     </div>
 
@@ -974,6 +1036,8 @@
 
             createClickParticles(event);
             playSoftEnvelopeSound();
+            if (data.theme === 'theme-happy') playEmotionMusic('happy');
+            else if (data.theme === 'theme-sad' || data.theme === 'theme-miss') playEmotionMusic('sad');
             element.classList.add('opening');
 
             setTimeout(() => {
@@ -985,15 +1049,21 @@
 
                 document.getElementById('messageModal').style.display = 'flex';
 
-                element.classList.add('opened');
-                document.getElementById(`badge-${id}`).innerText = (currentLang === 'ms') ? 'Sudah Dibuka' : 'Opened';
-                localStorage.setItem(`envelope_${id}`, 'opened');
-            }, 600);
+                    element.classList.add('opened');
+                    document.getElementById(`badge-${id}`).innerText = (currentLang === 'ms') ? 'Sudah Dibuka' : 'Opened';
+                    localStorage.setItem(`envelope_${id}`, 'opened');
+                    updateProgress();
+                }, 600);
         }
 
         function closeModal() {
             document.getElementById('messageModal').style.display = 'none';
         }
+
+        // Klik tepi (luar modal-content) terus tutup surat
+        document.getElementById('messageModal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
 
         function openSettings() {
             document.getElementById('settingsModal').style.display = 'flex';
@@ -1054,8 +1124,447 @@
             }
         }
 
+        function surpriseMe() {
+            let all = Object.keys(messagesData).map(id => ({ id, custom: false }));
+            let custom = JSON.parse(localStorage.getItem('customLetters') || '{}');
+            Object.keys(custom).forEach(id => {
+                if (!custom[id].pass) all.push({ id, custom: true }); // skip private
+            });
+            if (all.length === 0) return;
+            const pick = all[Math.floor(Math.random() * all.length)];
+            const el = document.querySelector(`[data-id="${pick.id}"]`);
+            if (el) {
+                if (pick.custom) openCustomLetter(pick.id, { currentTarget: el, clientX: 0, clientY: 0 }, el);
+                else openEnvelope(pick.id, { currentTarget: el, clientX: 0, clientY: 0 }, el);
+            }
+        }
+
+
+        // ===== PROGRESS BAR =====
+        function updateProgress() {
+            let total = Object.keys(messagesData).length;
+            let custom = JSON.parse(localStorage.getItem('customLetters') || '{}');
+            total += Object.keys(custom).length;
+            let opened = 0;
+            for (let id in messagesData) {
+                if (localStorage.getItem('envelope_' + id) === 'opened') opened++;
+            }
+            for (let id in custom) {
+                if (localStorage.getItem('envelope_' + id) === 'opened') opened++;
+            }
+            const pct = total === 0 ? 0 : Math.round((opened / total) * 100);
+            document.getElementById('progressBar').style.width = pct + '%';
+            document.getElementById('progressText').innerText = opened + '/' + total;
+        }
+
+        // ===== CUSTOM LETTER (Tambah sendiri) =====
+        function openAddLetter() {
+            document.getElementById('addLetterModal').style.display = 'flex';
+        }
+        function closeAddLetter() {
+            document.getElementById('addLetterModal').style.display = 'none';
+        }
+
+        function saveCustomLetter() {
+            const title = document.getElementById('newLetterTitle').value.trim();
+            const text = document.getElementById('newLetterText').value.trim();
+            const pass = document.getElementById('newLetterPass').value;
+            const mood = document.getElementById('newLetterMood').value;
+            const imgInput = document.getElementById('newLetterImg');
+            if (!title || !text) {
+                alert('Sila isi tajuk dan isi warkah.');
+                return;
+            }
+            const id = 'custom_' + Date.now();
+            let imgData = '';
+            const finish = (img) => {
+                let themeMap = { happy: 'theme-happy', sad: 'theme-sad', miss: 'theme-miss' };
+                const letter = {
+                    title: { ms: title, en: title },
+                    text: { ms: text, en: text },
+                    theme: themeMap[mood] || 'theme-default',
+                    custom: true,
+                    created: new Date().toLocaleDateString('ms-MY')
+                };
+                if (img) letter.img = img;
+                if (pass) letter.pass = pass;
+                let custom = JSON.parse(localStorage.getItem('customLetters') || '{}');
+                custom[id] = letter;
+                localStorage.setItem('customLetters', JSON.stringify(custom));
+                renderCustomLetters();
+                updateProgress();
+                closeAddLetter();
+                document.getElementById('newLetterTitle').value = '';
+                document.getElementById('newLetterText').value = '';
+                document.getElementById('newLetterPass').value = '';
+                document.getElementById('newLetterMood').value = 'default';
+                imgInput.value = '';
+            };
+            if (imgInput.files && imgInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => finish(e.target.result);
+                reader.readAsDataURL(imgInput.files[0]);
+            } else {
+                finish('');
+            }
+        }
+
+        function renderCustomLetters() {
+            let custom = JSON.parse(localStorage.getItem('customLetters') || '{}');
+            const container = document.getElementById('customLettersContainer');
+            if (!container) return;
+            container.innerHTML = '';
+            const ids = Object.keys(custom);
+            if (ids.length === 0) return;
+            const sec = document.createElement('div');
+            sec.className = 'category-section';
+            sec.innerHTML = '<div class="category-title">✍️ Warkah Saya Sendiri</div>';
+            const grid = document.createElement('div');
+            grid.className = 'envelope-grid';
+            ids.forEach(id => {
+                const d = custom[id];
+                const env = document.createElement('div');
+                env.className = 'envelope scrapbook-casual';
+                env.setAttribute('data-id', id);
+                env.setAttribute('data-custom', '1');
+                const opened = localStorage.getItem('envelope_' + id) === 'opened';
+                if (opened) env.classList.add('opened');
+                const dateStr = d.created ? ' · ' + d.created : '';
+                env.innerHTML = '<div class="envelope-flap"></div><div class="envelope-content"><span class="envelope-title">' + (d.pass ? '🔒 ' : '') + d.title.ms + '</span><span class="status-badge" id="badge-' + id + '">' + (opened ? 'Sudah Dibuka' : 'Belum Buka') + dateStr + '</span></div>';
+                env.onclick = (ev) => openCustomLetter(id, ev, env);
+                grid.appendChild(env);
+            });
+            sec.appendChild(grid);
+            container.appendChild(sec);
+        }
+
+        function openCustomLetter(id, event, element) {
+            let custom = JSON.parse(localStorage.getItem('customLetters') || '{}');
+            const d = custom[id];
+            if (!d) return;
+            if (d.pass) {
+                pendingCustomId = id;
+                document.getElementById('passModal').style.display = 'flex';
+                return;
+            }
+            showCustomLetter(d, element, id);
+        }
+
+        function verifyPass() {
+            const pass = document.getElementById('passInput').value;
+            let custom = JSON.parse(localStorage.getItem('customLetters') || '{}');
+            const d = custom[pendingCustomId];
+            if (d && d.pass === pass) {
+                closePass();
+                const el = document.querySelector('[data-id="' + pendingCustomId + '"]');
+                showCustomLetter(d, el, pendingCustomId);
+            } else {
+                alert('Kata laluan salah.');
+            }
+        }
+        function closePass() {
+            document.getElementById('passModal').style.display = 'none';
+            document.getElementById('passInput').value = '';
+        }
+
+        function showCustomLetter(d, element, id) {
+            document.getElementById('modalCategoryTitle').innerText = d.title[currentLang] || d.title.ms;
+            let body = (d.text[currentLang] || d.text.ms).replace(/\n/g, '<br>');
+            let html = '<div>' + body + '</div>';
+            if (d.img) html = '<img src="' + d.img + '" style="max-width:100%; border-radius:12px; margin-bottom:15px;"><br>' + html;
+            if (d.created) html += '<p style="font-size:11px; opacity:0.5; margin-top:10px;">✍️ Ditulis: ' + d.created + '</p>';
+            // Butang edit/padam untuk custom
+            html += '<div style="margin-top:15px; display:flex; gap:10px;">' +
+                '<button class="btn-close" style="background:#3a7bd5; float:none;" onclick="editCustomLetter(\'' + id + '\')">✏️ Edit</button>' +
+                '<button class="btn-close" style="background:#b03a48; float:none;" onclick="deleteCustomLetter(\'' + id + '\')">🗑️ Padam</button>' +
+                '<button class="btn-close" style="background:var(--accent-gold); float:none;" onclick="closeModal()">✖️ Tutup</button></div>';
+            document.getElementById('modalText').innerHTML = html;
+            if (d.theme === 'theme-happy') playEmotionMusic('happy');
+            else if (d.theme === 'theme-sad' || d.theme === 'theme-miss') playEmotionMusic('sad');
+            const modalBox = document.getElementById('modalBoxTheme');
+            modalBox.className = 'modal-content ' + (d.theme || 'theme-default');
+            document.getElementById('messageModal').style.display = 'flex';
+            element.classList.add('opened');
+            const badge = document.getElementById('badge-' + id);
+            if (badge) badge.innerText = (currentLang === 'ms') ? 'Sudah Dibuka' : 'Opened';
+            localStorage.setItem('envelope_' + id, 'opened');
+            updateProgress();
+        }
+
+        function editCustomLetter(id) {
+            let custom = JSON.parse(localStorage.getItem('customLetters') || '{}');
+            const d = custom[id];
+            if (!d) return;
+            closeModal();
+            document.getElementById('newLetterTitle').value = d.title.ms;
+            document.getElementById('newLetterText').value = d.text.ms;
+            document.getElementById('newLetterPass').value = d.pass || '';
+            if (d.theme === 'theme-happy') document.getElementById('newLetterMood').value = 'happy';
+            else if (d.theme === 'theme-sad') document.getElementById('newLetterMood').value = 'sad';
+            else if (d.theme === 'theme-miss') document.getElementById('newLetterMood').value = 'miss';
+            else document.getElementById('newLetterMood').value = 'default';
+            // Tanda edit mode
+            editingCustomId = id;
+            document.getElementById('addLetterModal').style.display = 'flex';
+            // Tukar fungsi simpan jadi update
+            document.getElementById('saveCustomBtn').setAttribute('onclick', 'updateCustomLetter()');
+        }
+
+        let editingCustomId = null;
+        function updateCustomLetter() {
+            const title = document.getElementById('newLetterTitle').value.trim();
+            const text = document.getElementById('newLetterText').value.trim();
+            const pass = document.getElementById('newLetterPass').value;
+            const mood = document.getElementById('newLetterMood').value;
+            if (!title || !text) { alert('Sila isi tajuk dan isi.'); return; }
+            const id = editingCustomId;
+            let custom = JSON.parse(localStorage.getItem('customLetters') || '{}');
+            const d = custom[id];
+            let themeMap = { happy: 'theme-happy', sad: 'theme-sad', miss: 'theme-miss' };
+            custom[id] = {
+                title: { ms: title, en: title },
+                text: { ms: text, en: text },
+                theme: themeMap[mood] || 'theme-default',
+                custom: true,
+                created: d.created || new Date().toLocaleDateString('ms-MY'),
+                img: d.img || '',
+                pass: pass || ''
+            };
+            localStorage.setItem('customLetters', JSON.stringify(custom));
+            editingCustomId = null;
+            document.getElementById('saveCustomBtn').setAttribute('onclick', 'saveCustomLetter()');
+            closeAddLetter();
+            document.getElementById('newLetterTitle').value = '';
+            document.getElementById('newLetterText').value = '';
+            document.getElementById('newLetterPass').value = '';
+            document.getElementById('newLetterMood').value = 'default';
+            renderCustomLetters();
+        }
+
+        function deleteCustomLetter(id) {
+            if (!confirm('Padam warkah ini?')) return;
+            let custom = JSON.parse(localStorage.getItem('customLetters') || '{}');
+            delete custom[id];
+            localStorage.setItem('customLetters', JSON.stringify(custom));
+            localStorage.removeItem('envelope_' + id);
+            closeModal();
+            renderCustomLetters();
+            updateProgress();
+        }
+
+        // ===== EXPORT / IMPORT / RESET =====
+        function exportLetters() {
+            const data = {
+                customLetters: localStorage.getItem('customLetters') || '{}',
+                opened: {}
+            };
+            let custom = JSON.parse(localStorage.getItem('customLetters') || '{}');
+            Object.keys(custom).forEach(id => {
+                if (localStorage.getItem('envelope_' + id) === 'opened') data.opened[id] = 'opened';
+            });
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'openwhen_backup.json';
+            a.click();
+        }
+
+        function importLetters(input) {
+            const f = input.files[0];
+            if (!f) return;
+            const reader = new FileReader();
+            reader.onload = e => {
+                try {
+                    const d = JSON.parse(e.target.result);
+                    if (d.customLetters) localStorage.setItem('customLetters', d.customLetters);
+                    if (d.opened) {
+                        for (let id in d.opened) localStorage.setItem('envelope_' + id, 'opened');
+                    }
+                    renderCustomLetters();
+                    updateProgress();
+                    syncOpenedBadges();
+                    alert('Import berjaya!');
+                } catch (err) { alert('Fail rosak.'); }
+            };
+            reader.readAsText(f);
+            input.value = '';
+        }
+
+        function resetAllLetters() {
+            if (!confirm('Reset SEMUA warkah custom & tanda buka? (Default letter kekal)')) return;
+            localStorage.removeItem('customLetters');
+            let custom = JSON.parse(localStorage.getItem('customLetters') || '{}');
+            // clear opened flags for custom only
+            Object.keys(custom).forEach(id => localStorage.removeItem('envelope_' + id));
+            renderCustomLetters();
+            updateProgress();
+            syncOpenedBadges();
+        }
+
+        function syncOpenedBadges() {
+            let all = Object.assign({}, messagesData);
+            let custom = JSON.parse(localStorage.getItem('customLetters') || '{}');
+            Object.keys(custom).forEach(k => all[k] = custom[k]);
+            for (let id in all) {
+                const opened = localStorage.getItem('envelope_' + id) === 'opened';
+                const env = document.querySelector('[data-id="' + id + '"]');
+                if (env) {
+                    if (opened) env.classList.add('opened'); else env.classList.remove('opened');
+                    const badge = document.getElementById('badge-' + id);
+                    if (badge) badge.innerText = opened ? ((currentLang === 'ms') ? 'Sudah Dibuka' : 'Opened') : ((currentLang === 'ms') ? 'Belum Buka' : 'Not Open');
+                }
+            }
+        }
+
+        // ===== CUSTOM LETTER (Tambah sendiri) =====
+        function openAddLetter() {
+            document.getElementById('addLetterModal').style.display = 'flex';
+        }
+        function closeAddLetter() {
+            document.getElementById('addLetterModal').style.display = 'none';
+        }
+
+        function saveCustomLetter() {
+            const title = document.getElementById('newLetterTitle').value.trim();
+            const text = document.getElementById('newLetterText').value.trim();
+            const pass = document.getElementById('newLetterPass').value;
+            const imgInput = document.getElementById('newLetterImg');
+            if (!title || !text) {
+                alert('Sila isi tajuk dan isi warkah.');
+                return;
+            }
+            const id = 'custom_' + Date.now();
+            let imgData = '';
+            const finish = (img) => {
+                const letter = { title: { ms: title, en: title }, text: { ms: text, en: text }, theme: 'theme-default', custom: true };
+                if (img) letter.img = img;
+                if (pass) letter.pass = pass;
+                let custom = JSON.parse(localStorage.getItem('customLetters') || '{}');
+                custom[id] = letter;
+                localStorage.setItem('customLetters', JSON.stringify(custom));
+                renderCustomLetters();
+                closeAddLetter();
+                document.getElementById('newLetterTitle').value = '';
+                document.getElementById('newLetterText').value = '';
+                document.getElementById('newLetterPass').value = '';
+                imgInput.value = '';
+            };
+            if (imgInput.files && imgInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => finish(e.target.result);
+                reader.readAsDataURL(imgInput.files[0]);
+            } else {
+                finish('');
+            }
+        }
+
+        function renderCustomLetters() {
+            let custom = JSON.parse(localStorage.getItem('customLetters') || '{}');
+            const container = document.getElementById('customLettersContainer');
+            if (!container) return;
+            container.innerHTML = '';
+            const ids = Object.keys(custom);
+            if (ids.length === 0) return;
+            const sec = document.createElement('div');
+            sec.className = 'category-section';
+            sec.innerHTML = '<div class="category-title">✍️ Warkah Saya Sendiri</div>';
+            const grid = document.createElement('div');
+            grid.className = 'envelope-grid';
+            ids.forEach(id => {
+                const d = custom[id];
+                const env = document.createElement('div');
+                env.className = 'envelope scrapbook-casual';
+                env.setAttribute('data-id', id);
+                env.setAttribute('data-custom', '1');
+                if (localStorage.getItem('envelope_' + id) === 'opened') env.classList.add('opened');
+                env.innerHTML = '<div class="envelope-flap"></div><div class="envelope-content"><span class="envelope-title">' + (d.pass ? '🔒 ' : '') + d.title.ms + '</span><span class="status-badge" id="badge-' + id + '">' + (localStorage.getItem('envelope_' + id) === 'opened' ? 'Sudah Dibuka' : 'Belum Buka') + '</span></div>';
+                env.onclick = (ev) => openCustomLetter(id, ev, env);
+                grid.appendChild(env);
+            });
+            sec.appendChild(grid);
+            container.appendChild(sec);
+        }
+
+        function openCustomLetter(id, event, element) {
+            let custom = JSON.parse(localStorage.getItem('customLetters') || '{}');
+            const d = custom[id];
+            if (!d) return;
+            if (d.pass) {
+                pendingCustomId = id;
+                document.getElementById('passModal').style.display = 'flex';
+                return;
+            }
+            showCustomLetter(d, element, id);
+        }
+
+        let pendingCustomId = null;
+        function verifyPass() {
+            const pass = document.getElementById('passInput').value;
+            let custom = JSON.parse(localStorage.getItem('customLetters') || '{}');
+            const d = custom[pendingCustomId];
+            if (d && d.pass === pass) {
+                closePass();
+                const el = document.querySelector('[data-id="' + pendingCustomId + '"]');
+                showCustomLetter(d, el, pendingCustomId);
+            } else {
+                alert('Kata laluan salah.');
+            }
+        }
+        function closePass() {
+            document.getElementById('passModal').style.display = 'none';
+            document.getElementById('passInput').value = '';
+        }
+
+        function showCustomLetter(d, element, id) {
+            document.getElementById('modalCategoryTitle').innerText = d.title[currentLang] || d.title.ms;
+            let body = d.text[currentLang] || d.text.ms;
+            let html = '<div>' + body.replace(/\n/g, '<br>') + '</div>';
+            if (d.img) html = '<img src="' + d.img + '" style="max-width:100%; border-radius:12px; margin-bottom:15px;"><br>' + html;
+            document.getElementById('modalText').innerHTML = html;
+            if (d.theme === 'theme-happy') playEmotionMusic('happy');
+            else if (d.theme === 'theme-sad' || d.theme === 'theme-miss') playEmotionMusic('sad');
+            const modalBox = document.getElementById('modalBoxTheme');
+            modalBox.className = 'modal-content ' + (d.theme || 'theme-default');
+            document.getElementById('messageModal').style.display = 'flex';
+            element.classList.add('opened');
+            const badge = document.getElementById('badge-' + id);
+            if (badge) badge.innerText = (currentLang === 'ms') ? 'Sudah Dibuka' : 'Opened';
+            localStorage.setItem('envelope_' + id, 'opened');
+        }
+
+        // ===== BACKGROUND MUSIC PER EMOSI (generated soft instrumental) =====
+        let emoAudioCtx = null;
+        function playEmotionMusic(mood) {
+            try {
+                if (!emoAudioCtx) emoAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (emoAudioCtx.state === 'suspended') emoAudioCtx.resume();
+                const notes = (mood === 'happy')
+                    ? [523.25, 659.25, 783.99, 659.25, 587.33, 659.25]  // C5 E5 G5 major - cheerful
+                    : [392.00, 349.23, 329.63, 349.23, 293.66, 329.63]; // G4 F4 E4 softer - sad
+                let step = 0;
+                const playNote = () => {
+                    if (step >= notes.length) return;
+                    const osc = emoAudioCtx.createOscillator();
+                    const g = emoAudioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.value = notes[step];
+                    step++;
+                    g.gain.setValueAtTime(0.0001, emoAudioCtx.currentTime);
+                    g.gain.exponentialRampToValueAtTime(0.08, emoAudioCtx.currentTime + 0.05);
+                    g.gain.exponentialRampToValueAtTime(0.0001, emoAudioCtx.currentTime + 0.6);
+                    osc.connect(g); g.connect(emoAudioCtx.destination);
+                    osc.start(); osc.stop(emoAudioCtx.currentTime + 0.65);
+                    setTimeout(playNote, 350);
+                };
+                playNote();
+            } catch (e) {}
+        }
+
         window.onload = function() {
             createPetals();
+            renderCustomLetters();
+            updateProgress();
+            syncOpenedBadges();
             document.getElementById('langSelect').value = currentLang;
             updateUItext();
 
