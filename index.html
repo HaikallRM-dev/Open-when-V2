@@ -691,6 +691,49 @@
         .screen-title { font-family: 'Playfair Display', serif; color: var(--accent-gold); font-size: 26px; margin-bottom: 6px; }
         .back-link { font-size: 13px; opacity: 0.7; cursor: pointer; display: inline-block; margin-bottom: 16px; }
         .back-link:hover { color: var(--accent-gold); }
+
+        /* ===== V2.1 STEP 7: Better animations ===== */
+        /* Smooth screen transition */
+        #homeScreen, #appScreen, #welcomeScreen, #secretScreen, #timelineScreen, #galleryScreen {
+            animation: v3Fade 0.6s ease;
+        }
+        @keyframes v3Fade {
+            from { opacity: 0; transform: translateY(14px) scale(0.99); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        /* Envelope micro-interaction */
+        .envelope { transition: transform 0.25s ease, box-shadow 0.25s ease; }
+        .envelope:hover { transform: translateY(-4px) scale(1.02); box-shadow: 0 10px 26px rgba(224,169,109,0.3); }
+        /* Button press feedback */
+        .btn-home:active { transform: scale(0.96); }
+        .control-btn { transition: transform 0.2s ease, background 0.2s ease; }
+        .control-btn:active { transform: scale(0.88); }
+        /* Modal soft pop */
+        .modal-content, .settings-content, .secret-card, .welcome-card {
+            animation: v3Pop 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+        }
+        @keyframes v3Pop {
+            from { opacity: 0; transform: scale(0.92); }
+            to   { opacity: 1; transform: scale(1); }
+        }
+        /* Stat card subtle pulse on load */
+        .stat-card { animation: v3Fade 0.8s ease; }
+
+        /* ===== V2.1 STEP 9: Per-letter warna ===== */
+        .envelope.theme-sad { border-left: 4px solid #6ba3d6; }
+        .envelope.theme-miss { border-left: 4px solid #b07cd6; }
+        .envelope.theme-happy { border-left: 4px solid #ffb703; }
+        .envelope.theme-angry { border-left: 4px solid #e07a5f; }
+        .envelope.theme-hug { border-left: 4px solid #e08fb0; }
+        .envelope.theme-sleep { border-left: 4px solid #7c83d6; }
+        .envelope.theme-default { border-left: 4px solid var(--accent-gold); }
+        /* Soft tint on envelope content by theme */
+        .envelope.theme-sad .envelope-title { color: #9cc7ec; }
+        .envelope.theme-miss .envelope-title { color: #d4a8ec; }
+        .envelope.theme-happy .envelope-title { color: #ffd166; }
+        .envelope.theme-angry .envelope-title { color: #f0a48f; }
+        .envelope.theme-hug .envelope-title { color: #f0b8d0; }
+        .envelope.theme-sleep .envelope-title { color: #a8aef0; }
     </style>
 </head>
 <body>
@@ -928,6 +971,14 @@
                     <option value="ms">Bahasa Melayu</option>
                     <option value="en">English</option>
                 </select>
+            </div>
+            <div class="setting-item">
+                <span>🎵 Muzik ikut emosi</span>
+                <input type="checkbox" id="moodMusicToggle" onchange="toggleMoodMusic()" checked>
+            </div>
+            <div class="setting-item">
+                <span>🔊 Bunyi sentuhan (OFF = senyap)</span>
+                <input type="checkbox" id="soundFxToggle" onchange="toggleSoundFx()">
             </div>
             <button class="btn-close" id="txtSaveClose" style="width:100%; float:none;" onclick="closeSettings()">Simpan & Tutup</button>
             <hr style="border-color:rgba(224,169,109,0.2); margin:15px 0;">
@@ -1846,6 +1897,7 @@
 
             // V3: ambience + show home screen as landing
             setAmbience();
+            applySoundSettings();
             showScreen('homeScreen');
         };
 
@@ -1995,6 +2047,63 @@
         function escapeHtml(s) {
             return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
         }
+
+        // ===== V2.1 STEP 8 + 10: Settings + Sound design =====
+        let moodMusicOn = true;
+        let soundFxOn = false; // OFF by default (Step 10)
+
+        function toggleMoodMusic() {
+            moodMusicOn = document.getElementById('moodMusicToggle').checked;
+            localStorage.setItem('moodMusic', moodMusicOn ? 'on' : 'off');
+        }
+        function toggleSoundFx() {
+            soundFxOn = document.getElementById('soundFxToggle').checked;
+            localStorage.setItem('soundFx', soundFxOn ? 'on' : 'off');
+            if (soundFxOn) playClickSound(); // preview
+        }
+
+        // Step 10: soft click/hover sound (Web Audio, generated)
+        let sfxCtx = null;
+        function playClickSound() {
+            if (!soundFxOn) return;
+            try {
+                if (!sfxCtx) sfxCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (sfxCtx.state === 'suspended') sfxCtx.resume();
+                const osc = sfxCtx.createOscillator();
+                const g = sfxCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.value = 880;
+                g.gain.setValueAtTime(0.0001, sfxCtx.currentTime);
+                g.gain.exponentialRampToValueAtTime(0.05, sfxCtx.currentTime + 0.01);
+                g.gain.exponentialRampToValueAtTime(0.0001, sfxCtx.currentTime + 0.12);
+                osc.connect(g); g.connect(sfxCtx.destination);
+                osc.start(); osc.stop(sfxCtx.currentTime + 0.13);
+            } catch(e) {}
+        }
+
+        // Step 8: gate mood music by setting
+        const _origPlayEmotionMusic = playEmotionMusic;
+        playEmotionMusic = function(mood) {
+            if (!moodMusicOn) return;
+            _origPlayEmotionMusic(mood);
+        };
+
+        // Apply saved settings on load
+        function applySoundSettings() {
+            moodMusicOn = localStorage.getItem('moodMusic') !== 'off';
+            soundFxOn = localStorage.getItem('soundFx') === 'on';
+            const mm = document.getElementById('moodMusicToggle');
+            const fx = document.getElementById('soundFxToggle');
+            if (mm) mm.checked = moodMusicOn;
+            if (fx) fx.checked = soundFxOn;
+        }
+
+        // Hook subtle click sound to key actions
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.btn-home, .control-btn, .envelope, .btn-close, .back-link')) {
+                playClickSound();
+            }
+        });
 
     </script>
 </body>
