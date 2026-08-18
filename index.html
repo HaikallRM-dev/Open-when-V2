@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Open When Letters ❤️ (v2.1)</title>
+    <title>Open When Letters ❤️ (v2.2)</title>
+    <meta name="theme-color" content="#1c2541">
+    <link rel="manifest" href="manifest.json">
     <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,700;1,400&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -436,6 +438,55 @@
             z-index: 2;
         }
 
+        /* ===== V2.2 #7 LETTER READING EXPERIENCE ===== */
+        .modal-content {
+            transition: box-shadow 0.4s, transform 0.4s;
+        }
+        .letter-reveal {
+            animation: letterReveal 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+        }
+        @keyframes letterReveal {
+            0% { opacity: 0; transform: translateY(18px); filter: blur(6px); }
+            100% { opacity: 1; transform: translateY(0); filter: blur(0); }
+        }
+        .letter-body { transition: filter 0.5s ease; }
+
+        /* ===== V2.2 #8 COMFORTABLE READING MODE ===== */
+        body.read-mode { overflow: hidden; }
+        body.read-mode .stars-bg,
+        body.read-mode .petal-container { opacity: 0.15; }
+        body.read-mode .modal { background: rgba(5,7,13,0.96); }
+        body.read-mode .modal-content {
+            max-width: 680px;
+            box-shadow: 0 0 60px rgba(224,169,109,0.25);
+        }
+        body.read-mode .letter-body {
+            font-size: 30px;
+            line-height: 1.7;
+            text-align: center;
+        }
+        .reading-controls {
+            position: fixed;
+            top: 14px;
+            right: 14px;
+            display: none;
+            gap: 8px;
+            z-index: 150;
+        }
+        body.read-mode .reading-controls { display: flex; }
+        .reading-controls button {
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            background: rgba(28,37,65,0.7);
+            border: 1px solid rgba(224,169,109,0.4);
+            color: var(--text-light);
+            font-size: 16px;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .reading-controls button:hover { background: rgba(224,169,109,0.3); }
+        body.read-mode .btn-close { display: none; }
+
         .btn-close {
             background-color: var(--accent-gold);
             color: #0b132b;
@@ -519,6 +570,8 @@
         #homeScreen {
             animation: fadeIn 0.8s ease;
             display: none;
+            position: relative;
+            padding-top: 60px;
         }
         .home-greeting {
             font-family: 'Playfair Display', serif;
@@ -566,10 +619,14 @@
         }
         .home-actions {
             display: flex;
-            gap: 12px;
+            flex-direction: column;
+            gap: 14px;
             justify-content: center;
+            align-items: center;
             flex-wrap: wrap;
+            margin-top: 8px;
         }
+        .home-row { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
         .btn-home {
             padding: 13px 24px;
             border-radius: 30px;
@@ -580,9 +637,41 @@
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
         }
+        /* Hero button (Browse Letters) */
+        .btn-home.hero {
+            background: linear-gradient(90deg, #e0a96d, #ffb703);
+            color: #1c2541;
+            font-size: 18px;
+            font-weight: 600;
+            padding: 16px 40px;
+            box-shadow: 0 8px 24px rgba(224,169,109,0.4);
+        }
+        /* Secondary buttons */
+        .btn-home.secondary { background: rgba(28,37,65,0.6); color: var(--text-light); border: 1px solid rgba(224,169,109,0.3); font-size: 14px; }
         .btn-home.primary { background: linear-gradient(90deg, #e0a96d, #ffb703); color: #1c2541; }
         .btn-home.ghost { background: rgba(28,37,65,0.6); color: var(--text-light); border: 1px solid rgba(224,169,109,0.3); }
         .btn-home:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(224,169,109,0.35); }
+        /* Corner minimalist icons */
+        .home-corner {
+            position: absolute;
+            top: 18px;
+            right: 18px;
+            display: flex;
+            gap: 10px;
+            z-index: 20;
+        }
+        .corner-icon {
+            width: 42px; height: 42px;
+            border-radius: 50%;
+            background: rgba(28,37,65,0.55);
+            border: 1px solid rgba(224,169,109,0.3);
+            color: var(--text-light);
+            font-size: 18px;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+        }
+        .corner-icon:hover { transform: scale(1.1); background: rgba(224,169,109,0.25); box-shadow: 0 6px 16px rgba(224,169,109,0.3); }
 
         /* Surprise searching overlay */
         #surpriseOverlay {
@@ -734,6 +823,83 @@
         .envelope.theme-angry .envelope-title { color: #f0a48f; }
         .envelope.theme-hug .envelope-title { color: #f0b8d0; }
         .envelope.theme-sleep .envelope-title { color: #a8aef0; }
+
+        /* ===== V2.2 #2-#3: Reaction + Reply ===== */
+        .reaction-bar { display: flex; gap: 8px; margin: 16px 0 4px; flex-wrap: wrap; justify-content: center; }
+        .reaction-btn { background: rgba(224,169,109,0.12); border: 1px solid rgba(224,169,109,0.3); border-radius: 20px; padding: 6px 12px; cursor: pointer; font-size: 18px; transition: transform 0.15s, background 0.15s; }
+        .reaction-btn:hover { transform: scale(1.12); background: rgba(224,169,109,0.25); }
+        .reaction-btn.selected { background: var(--accent-gold); border-color: var(--accent-gold); }
+        .reply-box { width: 100%; min-height: 60px; background: rgba(255,255,255,0.06); border: 1px solid rgba(224,169,109,0.3); border-radius: 10px; padding: 10px; color: var(--text-light); font-family: 'Poppins', sans-serif; font-size: 14px; margin-top: 8px; resize: vertical; box-sizing: border-box; }
+        .btn-reply { margin-top: 8px; width: 100%; background: rgba(224,169,109,0.2); border: 1px solid rgba(224,169,109,0.4); color: var(--accent-gold); border-radius: 10px; padding: 10px; font-size: 14px; cursor: pointer; font-family: 'Poppins', sans-serif; transition: background 0.15s; }
+        .btn-reply:hover { background: rgba(224,169,109,0.3); }
+        .reply-saved { font-size: 13px; color: var(--accent-gold); margin-top: 8px; min-height: 18px; text-align: left; }
+        .reply-saved .react-emoji { font-size: 18px; margin-right: 4px; }
+        .reply-saved .reply-text { opacity: 0.9; }
+
+        /* ===== V2.2 #4 MOOD + #5 MYSTERY ===== */
+        .mood-prompt { position: fixed; inset: 0; background: rgba(10,8,20,0.85); display: none; align-items: center; justify-content: center; z-index: 200; }
+        .mood-content { background: var(--bg-card); padding: 28px; border-radius: 16px; text-align: center; max-width: 340px; border: 1px solid rgba(224,169,109,0.3); }
+        .mood-content h3 { font-family: 'Playfair Display', serif; color: var(--accent-gold); margin-top: 0; }
+        .mood-options { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 16px; }
+        .mood-opt { padding: 10px 16px; border-radius: 12px; background: rgba(224,169,109,0.12); border: 1px solid rgba(224,169,109,0.3); cursor: pointer; font-size: 14px; transition: background 0.15s, transform 0.15s; }
+        .mood-opt:hover { background: rgba(224,169,109,0.25); transform: scale(1.05); }
+        .mystery-overlay { position: fixed; inset: 0; background: rgba(10,8,20,0.9); display: none; align-items: center; justify-content: center; z-index: 200; flex-direction: column; }
+        .mystery-spin { font-size: 60px; animation: owSpin 1.5s linear infinite; }
+        @keyframes owSpin { 100% { transform: rotate(360deg); } }
+        .mystery-text { color: var(--accent-gold); margin-top: 20px; font-family: 'Playfair Display', serif; font-size: 18px; }
+        .mystery-pin-card { background: var(--bg-card); padding: 30px; border-radius: 16px; text-align: center; border: 1px solid rgba(224,169,109,0.3); max-width: 320px; }
+
+        /* ===== V2.2 #1 SHAREABLE LINK ===== */
+        .share-bar { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; justify-content: center; }
+        .share-btn {
+            background: rgba(224,169,109,0.18);
+            border: 1px solid rgba(224,169,109,0.4);
+            color: var(--accent-gold);
+            border-radius: 10px;
+            padding: 9px 16px;
+            font-size: 13px;
+            cursor: pointer;
+            font-family: 'Poppins', sans-serif;
+            transition: background 0.15s;
+        }
+        .share-btn:hover { background: rgba(224,169,109,0.32); }
+        .shared-tag { font-size: 11px; opacity: 0.6; margin-top: 6px; text-align: center; }
+        .copy-toast {
+            position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+            background: var(--accent-gold); color: #1c2541; padding: 10px 20px;
+            border-radius: 20px; font-size: 13px; font-weight: 600; z-index: 300;
+            animation: toastPop 0.3s ease;
+        }
+        @keyframes toastPop { from { opacity: 0; transform: translate(-50%, 10px); } to { opacity: 1; transform: translate(-50%, 0); } }
+        /* Share picker items */
+        .share-pick-item {
+            background: rgba(224,169,109,0.10);
+            border: 1px solid rgba(224,169,109,0.3);
+            color: var(--text-light);
+            border-radius: 10px;
+            padding: 12px 14px;
+            font-size: 14px;
+            text-align: left;
+            cursor: pointer;
+            font-family: 'Poppins', sans-serif;
+            transition: background 0.15s, transform 0.15s;
+        }
+        .share-pick-item:hover { background: rgba(224,169,109,0.22); transform: translateX(4px); }
+
+        /* ===== V2.2 #6 ENHANCED DASHBOARD ===== */
+        .dash-enhanced { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px,1fr)); gap: 12px; margin: 14px 0; }
+        .dash-card { background: rgba(224,169,109,0.08); border: 1px solid rgba(224,169,109,0.25); border-radius: 12px; padding: 14px; text-align: center; }
+        .dash-card .num { font-size: 26px; font-weight: 600; color: var(--accent-gold); }
+        .dash-card .lbl { font-size: 12px; opacity: 0.7; margin-top: 4px; }
+        .dash-profile { display: flex; align-items: center; gap: 10px; background: rgba(224,169,109,0.06); border: 1px solid rgba(224,169,109,0.2); border-radius: 12px; padding: 10px 14px; margin-bottom: 12px; }
+        .dash-profile .av { font-size: 28px; }
+        .dash-profile .nm { font-weight: 600; color: var(--accent-gold); }
+        .dash-profile .sub { font-size: 11px; opacity: 0.6; }
+        /* ===== V2.2 #12 EMPTY STATE ===== */
+        .empty-state { text-align: center; padding: 40px 20px; opacity: 0.8; }
+        .empty-state .empty-emoji { font-size: 48px; margin-bottom: 12px; }
+        .empty-state .empty-title { font-size: 17px; font-weight: 600; color: var(--accent-gold); margin-bottom: 6px; }
+        .empty-state .empty-sub { font-size: 13px; opacity: 0.65; max-width: 320px; margin: 0 auto; }
     </style>
 </head>
 <body>
@@ -758,10 +924,21 @@
             </div>
             <div class="home-quote" id="homeQuote">"Some words are meant to find you at the right moment."</div>
             <div class="home-actions">
-                <button class="btn-home primary" onclick="goToApp()">💌 Browse Letters</button>
-                <button class="btn-home ghost" onclick="v3Surprise()">🎲 Surprise me</button>
-                <button class="btn-home ghost" onclick="showScreen('timelineScreen')">📖 Our Story</button>
-                <button class="btn-home ghost" onclick="showScreen('galleryScreen')">🎬 Memories</button>
+                <button class="btn-home hero" onclick="goToApp()">💌 Browse Letters</button>
+                <div class="home-row">
+                    <button class="btn-home secondary" onclick="v3Surprise()">🎲 Surprise me</button>
+                    <button class="btn-home secondary" onclick="openMoodPrompt()">🤓 How I feel</button>
+                </div>
+                <div class="home-row">
+                    <button class="btn-home secondary" onclick="shareAllLetters()">🔗 Share All</button>
+                    <button class="btn-home secondary" onclick="openSharePicker()">🔗 Share One</button>
+                </div>
+            </div>
+            <!-- Corner minimalist icons -->
+            <div class="home-corner">
+                <button class="corner-icon" onclick="openMystery()" title="Mystery Box">🎁</button>
+                <button class="corner-icon" onclick="showScreen('timelineScreen')" title="Our Story">📖</button>
+                <button class="corner-icon" onclick="showScreen('galleryScreen')" title="Memories">🎬</button>
             </div>
         </div>
 
@@ -787,6 +964,7 @@
 
             <h2 id="txtDashTitle">Open When...</h2>
             <p class="subtitle" id="txtDashSub">Sentuh mana-mana sampul surat untuk membaca warkah</p>
+            <div id="enhancedDashboard" class="dash-enhanced"></div>
             <div style="margin-bottom:18px;">
                 <div style="font-size:12px; opacity:0.7; margin-bottom:4px;">Warkah dibuka: <span id="progressText">0/0</span></div>
                 <div style="height:8px; background:rgba(224,169,109,0.2); border-radius:10px; overflow:hidden;">
@@ -953,7 +1131,84 @@
         <div class="modal-content" id="modalBoxTheme">
             <h3 id="modalCategoryTitle"></h3>
             <div class="letter-body" id="modalText"></div>
+            <div class="reaction-bar" id="reactionBar"></div>
+            <textarea class="reply-box" id="replyBox" placeholder="Tulis balasan untuk surat ini..."></textarea>
+            <button class="btn-reply" id="btnReply" onclick="saveReply()">💬 Reply</button>
+            <div class="reply-saved" id="replyStatus"></div>
+            <div class="share-bar" id="shareBar"></div>
+            <div class="shared-tag" id="sharedTag"></div>
             <button class="btn-close" id="btnCloseLetter" onclick="closeModal()">Tutup Warkah</button>
+        </div>
+    </div>
+
+    <!-- V2.2 #8 READING MODE CONTROLS -->
+    <div class="reading-controls" id="readingControls">
+        <button onclick="readingFont(-2)" title="Kecil">A−</button>
+        <button onclick="readingFont(2)" title="Besar">A+</button>
+        <button onclick="exitReadingMode()" title="Tutup">✕</button>
+    </div>
+
+    <!-- V2.2 #4 MOOD PROMPT -->
+    <div class="mood-prompt" id="moodPrompt">
+        <div class="mood-content">
+            <h3>How are you feeling today?</h3>
+            <p style="font-size:13px;opacity:0.7;">Pilih mood, saya cadangkan surat untuk awak</p>
+            <div class="mood-options">
+                <div class="mood-opt" onclick="moodSelected('happy')">😊 Happy</div>
+                <div class="mood-opt" onclick="moodSelected('sad')">😢 Sad</div>
+                <div class="mood-opt" onclick="moodSelected('tired')">😴 Tired</div>
+                <div class="mood-opt" onclick="moodSelected('angry')">😠 Angry</div>
+                <div class="mood-opt" onclick="moodSelected('miss')">🥺 Missing</div>
+            </div>
+            <div class="mood-opt" style="margin-top:10px;background:transparent;" onclick="document.getElementById('moodPrompt').style.display='none'">Cancel</div>
+        </div>
+    </div>
+
+    <!-- V2.2 #5 MYSTERY BOX -->
+    <div class="mystery-overlay" id="mysteryOverlay">
+        <div class="mystery-spin">🎁</div>
+        <div class="mystery-text" id="mysteryText">Something is waiting for you...</div>
+    </div>
+
+    <!-- V2.2 #11 ONBOARDING MODAL -->
+    <div class="settings-modal" id="onboardModal">
+        <div class="settings-content" style="width:440px; max-height:85vh; overflow-y:auto; text-align:left;">
+            <h3 style="font-family:'Playfair Display',serif; color:var(--accent-gold); margin-top:0; text-align:center;">💌 Open When...</h3>
+            <p style="font-size:14px; text-align:center; opacity:0.85;">Selamat datang! Ini koleksi warkah untuk awak. Berikut cara guna:</p>
+            <div style="display:flex; flex-direction:column; gap:10px; margin:16px 0;">
+                <div style="display:flex; gap:10px; align-items:flex-start;"><span style="font-size:20px;">💌</span><div><b>Browse Letters</b><br><span style="font-size:12px; opacity:0.7;">Sentuh sampul untuk baca warkah.</span></div></div>
+                <div style="display:flex; gap:10px; align-items:flex-start;"><span style="font-size:20px;">🎲</span><div><b>Surprise me</b><br><span style="font-size:12px; opacity:0.7;">Buka surat rawak bila tak tahu nak baca yang mana.</span></div></div>
+                <div style="display:flex; gap:10px; align-items:flex-start;"><span style="font-size:20px;">🤓</span><div><b>How I feel</b><br><span style="font-size:12px; opacity:0.7;">Pilih mood, dapat surat yang sesuai.</span></div></div>
+                <div style="display:flex; gap:10px; align-items:flex-start;"><span style="font-size:20px;">🔗</span><div><b>Share</b><br><span style="font-size:12px; opacity:0.7;">Kongsi semua atau satu surat via link.</span></div></div>
+                <div style="display:flex; gap:10px; align-items:flex-start;"><span style="font-size:20px;">🎁</span><div><b>Mystery Box</b><br><span style="font-size:12px; opacity:0.7;">Masukkan kod rahsia untuk surat eksklusif.</span></div></div>
+                <div style="display:flex; gap:10px; align-items:flex-start;"><span style="font-size:20px;">➕</span><div><b>Tambah Sendiri</b><br><span style="font-size:12px; opacity:0.7;">Tulis warkah sendiri dari butang +.</span></div></div>
+            </div>
+            <button class="btn-close" style="width:100%; float:none; background:var(--accent-gold); color:#1c2541;" onclick="finishOnboarding()">Mula Menyintai ✨</button>
+        </div>
+    </div>
+
+    <!-- V2.2 #5 MYSTERY PIN DIALOG -->
+    <div class="mystery-overlay" id="mysteryPinDialog" style="background: rgba(10,8,20,0.95);">
+        <div class="mystery-pin-card">
+            <div style="font-size:40px;margin-bottom:10px;">🔐</div>
+            <h3 style="font-family:'Playfair Display',serif;color:var(--accent-gold);margin:0 0 6px;">Mystery Box</h3>
+            <p style="font-size:13px;opacity:0.75;margin:0 0 14px;">Masukkan kod rahsia untuk buka surat eksklusif.</p>
+            <input type="password" id="mysteryPinInput" placeholder="••••" style="width:140px;text-align:center;font-size:20px;padding:10px;border-radius:10px;border:1px solid rgba(224,169,109,0.4);background:rgba(255,255,255,0.06);color:var(--text-light);letter-spacing:6px;" />
+            <div id="mysteryPinError" style="color:#f0a48f;font-size:12px;min-height:16px;margin-top:8px;"></div>
+            <div style="display:flex;gap:10px;margin-top:10px;">
+                <button class="btn-reply" style="width:auto;padding:10px 20px;" onclick="verifyMysteryPin()">Buka</button>
+                <button class="btn-reply" style="width:auto;padding:10px 20px;background:transparent;" onclick="document.getElementById('mysteryPinDialog').style.display='none'">Batal</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- V2.2 #1 SHARE PICKER MODAL -->
+    <div class="settings-modal" id="sharePickerModal">
+        <div class="settings-content" style="width:420px; max-height:80vh; overflow-y:auto;">
+            <h3 style="font-family:'Playfair Display',serif; color:var(--accent-gold); margin-top:0;">🔗 Share a Letter</h3>
+            <p style="font-size:13px; opacity:0.7; margin:0 0 14px;">Pilih surat untuk dijana link kongsi (read-only).</p>
+            <div id="sharePickerList" style="display:flex; flex-direction:column; gap:8px;"></div>
+            <button class="btn-close" style="margin-top:16px; float:none; width:100%;" onclick="document.getElementById('sharePickerModal').style.display='none'">Tutup</button>
         </div>
     </div>
 
@@ -965,6 +1220,17 @@
                 <span id="txtDarkModeLabel">Mod Gelap (Dark Mode)</span>
                 <input type="checkbox" id="darkModeToggle" onchange="toggleDarkMode()">
             </div>
+            <hr style="border-color:rgba(224,169,109,0.2); margin:12px 0;">
+            <h4 style="color:var(--accent-gold); margin:0 0 8px; font-family:'Playfair Display',serif;">👤 Profil (untuk share)</h4>
+            <div class="setting-item" style="flex-direction:column; align-items:flex-start; gap:6px;">
+                <span>Nama penulis</span>
+                <input type="text" id="profileName" placeholder="Nama awak" style="width:100%; padding:8px; border-radius:8px; border:1px solid rgba(224,169,109,0.3); background:rgba(255,255,255,0.06); color:var(--text-light); font-family:'Poppins',sans-serif;">
+            </div>
+            <div class="setting-item" style="flex-direction:column; align-items:flex-start; gap:6px;">
+                <span>Avatar (emoji)</span>
+                <input type="text" id="profileAvatar" maxlength="2" placeholder="💛" style="width:60px; padding:8px; border-radius:8px; border:1px solid rgba(224,169,109,0.3); background:rgba(255,255,255,0.06); color:var(--text-light); font-size:18px; text-align:center;">
+            </div>
+            <button class="btn-close" style="width:100%; float:none; background:rgba(224,169,109,0.3); margin-top:6px;" onclick="saveProfile()">Simpan Profil</button>
             <div class="setting-item">
                 <span id="txtLangLabel">Bahasa (Language)</span>
                 <select id="langSelect" onchange="changeLanguage()">
@@ -1378,6 +1644,7 @@
         });
 
         function openSettings() {
+            fillProfileInputs();
             document.getElementById('settingsModal').style.display = 'flex';
         }
 
@@ -1467,6 +1734,7 @@
             const pct = total === 0 ? 0 : Math.round((opened / total) * 100);
             document.getElementById('progressBar').style.width = pct + '%';
             document.getElementById('progressText').innerText = opened + '/' + total;
+            if (typeof renderEnhancedDashboard === 'function') renderEnhancedDashboard();
         }
 
         // ===== CUSTOM LETTER (Tambah sendiri) =====
@@ -1899,6 +2167,15 @@
             setAmbience();
             applySoundSettings();
             showScreen('homeScreen');
+            // V2.2 #11 Onboarding trigger
+            if (!localStorage.getItem('ow_onboarded') && !location.hash) {
+                setTimeout(function(){ document.getElementById('onboardModal').style.display='flex'; }, 400);
+            }
+            checkSharedLink(); // V2.2 #1: if URL has #/letter/ or #/share/, open it
+            // V2.2 #13 PWA service worker registration
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('sw.js').catch(function(){});
+            }
         };
 
         // ===================== V3 FUNCTIONS =====================
@@ -1940,10 +2217,58 @@
             if (so) so.innerText = opened;
         }
 
+        // ===== V2.2 #10 PROFILE (localStorage) =====
+        function loadProfile() {
+            try { return JSON.parse(localStorage.getItem('ow_profile') || '{}'); } catch (e) { return {}; }
+        }
+        function saveProfile() {
+            const name = document.getElementById('profileName').value.trim();
+            const avatar = document.getElementById('profileAvatar').value.trim() || '💛';
+            localStorage.setItem('ow_profile', JSON.stringify({ name: name, avatar: avatar }));
+            showCopyToast('👤 Profil disimpan');
+            renderEnhancedDashboard();
+        }
+        function fillProfileInputs() {
+            const p = loadProfile();
+            const n = document.getElementById('profileName');
+            const a = document.getElementById('profileAvatar');
+            if (n) n.value = p.name || '';
+            if (a) a.value = p.avatar || '💛';
+        }
+
+        // ===== V2.2 #6 ENHANCED DASHBOARD =====
+        function renderEnhancedDashboard() {
+            const el = document.getElementById('enhancedDashboard');
+            if (!el) return;
+            let total = Object.keys(messagesData).length;
+            let custom = {};
+            try { custom = JSON.parse(localStorage.getItem('customLetters') || '{}'); } catch (e) {}
+            total += Object.keys(custom).length;
+            let opened = 0;
+            for (let id in messagesData) if (localStorage.getItem('envelope_' + id) === 'opened') opened++;
+            for (let id in custom) if (localStorage.getItem('envelope_' + id) === 'opened') opened++;
+            const waiting = total - opened;
+            const pct = total === 0 ? 0 : Math.round((opened / total) * 100);
+            let reactions = {};
+            try { reactions = JSON.parse(localStorage.getItem('ow_reactions') || '{}'); } catch (e) {}
+            const reactCount = Object.keys(reactions).length;
+            const p = loadProfile();
+            const profHtml = p.name
+                ? '<div class="dash-profile"><div class="av">' + (p.avatar || '💛') + '</div><div><div class="nm">' + escapeHtml(p.name) + '</div><div class="sub">Penulis warkah</div></div></div>'
+                : '';
+            el.innerHTML = profHtml +
+                '<div class="dash-card"><div class="num">' + total + '</div><div class="lbl">💌 Jumlah Surat</div></div>' +
+                '<div class="dash-card"><div class="num">' + opened + '</div><div class="lbl">❤️ Dibuka</div></div>' +
+                '<div class="dash-card"><div class="num">' + waiting + '</div><div class="lbl">📭 Menunggu</div></div>' +
+                '<div class="dash-card"><div class="num">' + pct + '%</div><div class="lbl">📊 Progres</div></div>' +
+                '<div class="dash-card"><div class="num">' + reactCount + '</div><div class="lbl">💬 Reaction</div></div>';
+        }
+
         // Go from home to the original V2 dashboard
         function goToApp() {
             showScreen('appScreen');
             updateProgress();
+            renderEnhancedDashboard();
         }
 
         // V3.3 Surprise Letter (animated)
@@ -2017,7 +2342,10 @@
             const list = document.getElementById('timelineList');
             if (!list) return;
             const mem = getMemories();
-            if (mem.length === 0) { list.innerHTML = '<p style="opacity:0.6; font-size:13px;">No memories yet. Add your first moment above. ✨</p>'; return; }
+            if (mem.length === 0) {
+                list.innerHTML = '<div class="empty-state"><div class="empty-emoji">📖</div><div class="empty-title">Kisah kami masih kosong</div><div class="empty-sub">Tambah kenangan pertama di atas — tarikh, cerita, dan gambar. ✨</div></div>';
+                return;
+            }
             list.innerHTML = mem.map(m => `
                 <div class="timeline-item">
                     <div class="timeline-dot"></div>
@@ -2033,7 +2361,10 @@
             const grid = document.getElementById('galleryGrid');
             if (!grid) return;
             const mem = getMemories().filter(m => m.img);
-            if (mem.length === 0) { grid.innerHTML = '<p style="opacity:0.6; font-size:13px;">Add memories with photos to fill this gallery. 📷</p>'; return; }
+            if (mem.length === 0) {
+                grid.innerHTML = '<div class="empty-state"><div class="empty-emoji">🎬</div><div class="empty-title">Tiada memori bergambar lagi</div><div class="empty-sub">Tambah kenangan dengan foto untuk penuhkan galeri ini. 📷</div></div>';
+                return;
+            }
             grid.innerHTML = mem.map(m => `
                 <div class="gallery-cell" onclick="openGalleryImg('${encodeURIComponent(m.img)}')">
                     <img src="${m.img}">
@@ -2098,12 +2429,550 @@
             if (fx) fx.checked = soundFxOn;
         }
 
+        // ===== V2.2 #2 REACTION + #3 REPLY =====
+        let currentOpenId = null;
+        let currentOpenCustom = false;
+
+        const REACTIONS = [
+            { e: '❤️', k: 'loved' },
+            { e: '😃', k: 'emotional' },
+            { e: '😄', k: 'smile' },
+            { e: '😌', k: 'comforted' },
+            { e: '😎', k: 'happy' }
+        ];
+
+        function loadReactions() {
+            try { return JSON.parse(localStorage.getItem('ow_reactions') || '{}'); } catch (e) { return {}; }
+        }
+        function saveReactions(obj) { localStorage.setItem('ow_reactions', JSON.stringify(obj)); }
+
+        function renderReactions(id) {
+            const bar = document.getElementById('reactionBar');
+            if (!bar) return;
+            const all = loadReactions();
+            const cur = all[id] || null;
+            bar.innerHTML = '';
+            REACTIONS.forEach(function(r) {
+                const b = document.createElement('div');
+                b.className = 'reaction-btn' + (cur === r.k ? ' selected' : '');
+                b.innerText = r.e;
+                b.title = r.k;
+                b.onclick = function() {
+                    const a = loadReactions();
+                    if (a[id] === r.k) delete a[id]; else a[id] = r.k;
+                    saveReactions(a);
+                    renderReactions(id);
+                    renderReply(id);
+                    if (typeof playClickSound === 'function') playClickSound();
+                };
+                bar.appendChild(b);
+            });
+        }
+
+        function loadReplies() {
+            try { return JSON.parse(localStorage.getItem('ow_replies') || '{}'); } catch (e) { return {}; }
+        }
+        function saveReplies(obj) { localStorage.setItem('ow_replies', JSON.stringify(obj)); }
+
+        function renderReply(id) {
+            const box = document.getElementById('replyBox');
+            const status = document.getElementById('replyStatus');
+            if (!box) return;
+            const allR = loadReplies();
+            const allReact = loadReactions();
+            const reactKey = allReact[id];
+            const reactEmoji = reactKey ? (REACTIONS.find(function(r){ return r.k === reactKey; }) || {}).e : '';
+            const replyTxt = allR[id] || '';
+            box.style.display = 'block';
+            box.value = replyTxt;
+            if (replyTxt || reactEmoji) {
+                let html = '';
+                if (reactEmoji) html += '<span class="react-emoji">' + reactEmoji + '</span>';
+                if (replyTxt) html += '<span class="reply-text">✅ Replied: ' + escapeHtml(replyTxt) + '</span>';
+                else if (reactEmoji) html += '<span class="reply-text">Reacted</span>';
+                status.innerHTML = html;
+            } else {
+                status.innerHTML = '';
+            }
+        }
+
+        function saveReply() {
+            if (currentOpenId == null) return;
+            const box = document.getElementById('replyBox');
+            const status = document.getElementById('replyStatus');
+            const txt = box.value.trim();
+            const all = loadReplies();
+            if (txt) { all[currentOpenId] = txt; }
+            else { delete all[currentOpenId]; }
+            saveReplies(all);
+            renderReply(currentOpenId);
+            if (typeof playClickSound === 'function') playClickSound();
+        }
+
+        // Hook into openEnvelope (standard letter)
+        const _origOpenEnvelope = openEnvelope;
+        openEnvelope = function(id, event, element) {
+            _origOpenEnvelope(id, event, element);
+            currentOpenId = id; currentOpenCustom = false;
+            setTimeout(function() {
+                renderReactions(id);
+                renderReply(id);
+                const st = document.getElementById('replyBox');
+                if (st) st.onblur = saveReply;
+            }, 650);
+        };
+
+        // Hook into showCustomLetter (custom letter) — wrap the effective one
+        const _origShowCustom = showCustomLetter;
+        showCustomLetter = function(d, element, id) {
+            _origShowCustom(d, element, id);
+            currentOpenId = id; currentOpenCustom = true;
+            setTimeout(function() {
+                renderReactions(id);
+                renderReply(id);
+                const st = document.getElementById('replyBox');
+                if (st) st.onblur = saveReply;
+            }, 150);
+        };
+
+        // ===== V2.2 #7 LETTER READING EXPERIENCE (reveal animation) =====
+        const _origOpenEnvelopeBody = openEnvelope;
+        // (openEnvelope already wrapped above; add reveal class to modalText)
+        function applyLetterReveal() {
+            const t = document.getElementById('modalText');
+            if (!t) return;
+            t.classList.remove('letter-reveal');
+            void t.offsetWidth; // reflow
+            t.classList.add('letter-reveal');
+        }
+
+        // Hook reveal into both openers (reuse wrapper)
+        const _origOpenEnv2 = openEnvelope;
+        openEnvelope = function(id, event, element) {
+            _origOpenEnv2(id, event, element);
+            setTimeout(applyLetterReveal, 650);
+        };
+        const _origShowCustom2 = showCustomLetter;
+        showCustomLetter = function(d, element, id) {
+            _origShowCustom2(d, element, id);
+            setTimeout(applyLetterReveal, 200);
+        };
+
+        // ===== V2.2 #8 COMFORTABLE READING MODE =====
+        let readingFontSize = 24;
+        function enterReadingMode() {
+            document.body.classList.add('read-mode');
+        }
+        function exitReadingMode() {
+            document.body.classList.remove('read-mode');
+        }
+        function readingFont(delta) {
+            readingFontSize = Math.max(16, Math.min(48, readingFontSize + delta));
+            const t = document.getElementById('modalText');
+            if (t) t.style.fontSize = readingFontSize + 'px';
+        }
+
+        // Hook: when a letter opens, also offer reading mode via long-press / button
+        // Add a "Read Mode" button into the modal (near reply) dynamically
+        (function() {
+            const modal = document.getElementById('messageModal');
+            if (modal && !document.getElementById('btnReadMode')) {
+                const b = document.createElement('button');
+                b.id = 'btnReadMode';
+                b.className = 'btn-reply';
+                b.style.marginTop = '6px';
+                b.style.background = 'transparent';
+                b.innerText = '📖 Read Mode';
+                b.onclick = function() { enterReadingMode(); };
+                modal.querySelector('.modal-content').insertBefore(b, document.getElementById('btnCloseLetter'));
+            }
+        })();
+
+        // ===== V2.2 #9 MICRO SOUND POLISH =====
+        // Variants: open = chime (higher), close = fade (lower), hover handled in CSS/cursor
+        function playOpenSound() {
+            if (!soundFxOn) return;
+            try {
+                if (!sfxCtx) sfxCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (sfxCtx.state === 'suspended') sfxCtx.resume();
+                const osc = sfxCtx.createOscillator();
+                const g = sfxCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(660, sfxCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(990, sfxCtx.currentTime + 0.1);
+                g.gain.setValueAtTime(0.0001, sfxCtx.currentTime);
+                g.gain.exponentialRampToValueAtTime(0.04, sfxCtx.currentTime + 0.02);
+                g.gain.exponentialRampToValueAtTime(0.0001, sfxCtx.currentTime + 0.25);
+                osc.connect(g); g.connect(sfxCtx.destination);
+                osc.start(); osc.stop(sfxCtx.currentTime + 0.26);
+            } catch(e) {}
+        }
+        function playCloseSound() {
+            if (!soundFxOn) return;
+            try {
+                if (!sfxCtx) sfxCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (sfxCtx.state === 'suspended') sfxCtx.resume();
+                const osc = sfxCtx.createOscillator();
+                const g = sfxCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(440, sfxCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(220, sfxCtx.currentTime + 0.15);
+                g.gain.setValueAtTime(0.0001, sfxCtx.currentTime);
+                g.gain.exponentialRampToValueAtTime(0.04, sfxCtx.currentTime + 0.02);
+                g.gain.exponentialRampToValueAtTime(0.0001, sfxCtx.currentTime + 0.2);
+                osc.connect(g); g.connect(sfxCtx.destination);
+                osc.start(); osc.stop(sfxCtx.currentTime + 0.21);
+            } catch(e) {}
+        }
+        // Hook open/close sounds
+        const _origOpenEnv3 = openEnvelope;
+        openEnvelope = function(id, event, element) {
+            _origOpenEnv3(id, event, element);
+            setTimeout(playOpenSound, 620);
+        };
+        const _origShowCustom3 = showCustomLetter;
+        showCustomLetter = function(d, element, id) {
+            _origShowCustom3(d, element, id);
+            setTimeout(playOpenSound, 180);
+        };
+        const _origCloseModal2 = closeModal;
+        closeModal = function() { playCloseSound(); _origCloseModal2(); };
+
+
+        // Hook reply save on close
+        const _origCloseModal = closeModal;
+        closeModal = function() { saveReply(); _origCloseModal(); };
+
+        // ===== V2.2 #1 SHAREABLE LINK =====
+        let currentShareData = null; // { id, custom, title, text, theme }
+
+        function b64encodeUnicode(str) {
+            return btoa(unescape(encodeURIComponent(str)));
+        }
+        function b64decodeUnicode(str) {
+            return decodeURIComponent(escape(atob(str)));
+        }
+
+        function buildShareLink(id, custom) {
+            if (custom) {
+                const customLetters = JSON.parse(localStorage.getItem('customLetters') || '{}');
+                const d = customLetters[id];
+                if (!d) return null;
+                const payload = {
+                    t: (d.title && (d.title.ms || d.title.en)) || 'Open When',
+                    x: (d.text && (d.text.ms || d.text.en)) || '',
+                    theme: d.theme || 'theme-default'
+                };
+                const enc = b64encodeUnicode(JSON.stringify(payload));
+                return location.origin + location.pathname + '#/share/' + enc;
+            } else {
+                // standard letter reference by id
+                return location.origin + location.pathname + '#/letter/' + id;
+            }
+        }
+
+        // Build a single link containing ALL letters (standard + custom)
+        function buildShareAllLink() {
+            const all = [];
+            Object.keys(messagesData).forEach(function(id) {
+                const data = messagesData[id];
+                all.push({
+                    t: (data.title && (data.title.ms || data.title.en)) || id,
+                    x: (data.text && (data.text.ms || data.text.en)) || '',
+                    theme: data.theme || 'theme-default'
+                });
+            });
+            let custom = {};
+            try { custom = JSON.parse(localStorage.getItem('customLetters') || '{}'); } catch (e) {}
+            Object.keys(custom).forEach(function(id) {
+                const d = custom[id];
+                if (d.pass) return; // skip private
+                all.push({
+                    t: (d.title && (d.title.ms || d.title.en)) || id,
+                    x: (d.text && (d.text.ms || d.text.en)) || '',
+                    theme: d.theme || 'theme-default'
+                });
+            });
+            const enc = b64encodeUnicode(JSON.stringify(all));
+            return location.origin + location.pathname + '#/shareall/' + enc;
+        }
+
+        function shareAllLetters() {
+            const link = buildShareAllLink();
+            copyToClipboard(link);
+            showCopyToast('🔗 All letters link disalin!');
+        }
+
+        function renderShareBar() {
+            const bar = document.getElementById('shareBar');
+            const tag = document.getElementById('sharedTag');
+            if (!bar) return;
+            bar.innerHTML = '';
+            if (!currentShareData) { if (tag) tag.innerText = ''; return; }
+            const btn = document.createElement('button');
+            btn.className = 'share-btn';
+            btn.innerText = '🔗 Share Link';
+            btn.onclick = function() { shareCurrentLetter(); };
+            bar.appendChild(btn);
+            if (tag && currentShareData.shared) tag.innerText = '🔒 Read-only shared view';
+        }
+
+        function shareCurrentLetter() {
+            if (!currentShareData) return;
+            const link = buildShareLink(currentShareData.id, currentShareData.custom);
+            if (!link) return;
+            copyToClipboard(link);
+            showCopyToast('🔗 Link disalin!');
+        }
+
+        function copyToClipboard(text) {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).catch(function(){ fallbackCopy(text); });
+            } else { fallbackCopy(text); }
+        }
+        function fallbackCopy(text) {
+            const ta = document.createElement('textarea');
+            ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+            document.body.appendChild(ta); ta.select();
+            try { document.execCommand('copy'); } catch (e) {}
+            document.body.removeChild(ta);
+        }
+        function showCopyToast(msg) {
+            const t = document.createElement('div');
+            t.className = 'copy-toast';
+            t.innerText = msg;
+            document.body.appendChild(t);
+            setTimeout(function(){ if (t.parentNode) t.parentNode.removeChild(t); }, 1800);
+        }
+
+        // Hook: capture current letter for sharing in openers
+        const _shareOpenEnv = openEnvelope;
+        openEnvelope = function(id, event, element) {
+            _shareOpenEnv(id, event, element);
+            const rb = document.getElementById('replyBox'); if (rb) rb.style.display = '';
+            const st = document.getElementById('sharedTag'); if (st) st.innerText = '';
+            currentShareData = { id: id, custom: false, shared: false };
+            setTimeout(renderShareBar, 650);
+        };
+        const _shareShowCustom = showCustomLetter;
+        showCustomLetter = function(d, element, id) {
+            _shareShowCustom(d, element, id);
+            const rb = document.getElementById('replyBox'); if (rb) rb.style.display = '';
+            const st = document.getElementById('sharedTag'); if (st) st.innerText = '';
+            currentShareData = { id: id, custom: true, shared: false };
+            setTimeout(renderShareBar, 200);
+        };
+
+        // ===== V2.2 #11 ONBOARDING =====
+        function finishOnboarding() {
+            localStorage.setItem('ow_onboarded', '1');
+            document.getElementById('onboardModal').style.display = 'none';
+        }
+
+        // Read shared link on load
+        function checkSharedLink() {
+            const h = location.hash || '';
+            if (h.indexOf('#/letter/') === 0) {
+                const id = h.slice(9);
+                if (messagesData[id]) {
+                    showScreen('appScreen');
+                    openEnvelope(id, null, document.querySelector('[data-id="' + id + '"]') || document.createElement('div'));
+                    currentShareData = { id: id, custom: false, shared: true };
+                    setTimeout(renderShareBar, 650);
+                    return true;
+                }
+            } else if (h.indexOf('#/share/') === 0) {
+                try {
+                    const json = JSON.parse(b64decodeUnicode(h.slice(8)));
+                    showScreen('appScreen');
+                    document.getElementById('modalCategoryTitle').innerText = json.t;
+                    document.getElementById('modalText').innerText = json.x;
+                    document.getElementById('modalBoxTheme').className = 'modal-content ' + (json.theme || 'theme-default');
+                    document.getElementById('messageModal').style.display = 'flex';
+                    // hide interactive parts for read-only
+                    document.getElementById('reactionBar').innerHTML = '';
+                    document.getElementById('replyBox').style.display = 'none';
+                    document.getElementById('shareBar').innerHTML = '';
+                    document.getElementById('sharedTag').innerText = '🔒 Read-only shared letter';
+                    return true;
+                } catch (e) { /* ignore bad link */ }
+            } else if (h.indexOf('#/shareall/') === 0) {
+                try {
+                    const arr = JSON.parse(b64decodeUnicode(h.slice(11)));
+                    if (Array.isArray(arr) && arr.length > 0) {
+                        showSharedAllViewer(arr);
+                        return true;
+                    }
+                } catch (e) { /* ignore bad link */ }
+            }
+            return false;
+        }
+
+        // Viewer for "Share All" — shows letters one by one with next/prev
+        function showSharedAllViewer(arr) {
+            let idx = 0;
+            showScreen('appScreen');
+            const modal = document.getElementById('messageModal');
+            const titleEl = document.getElementById('modalCategoryTitle');
+            const textEl = document.getElementById('modalText');
+            const boxEl = document.getElementById('modalBoxTheme');
+            // hide interactive parts
+            document.getElementById('reactionBar').innerHTML = '';
+            document.getElementById('replyBox').style.display = 'none';
+            document.getElementById('shareBar').innerHTML = '';
+            document.getElementById('sharedTag').innerText = '🔒 Shared collection (' + arr.length + ' letters)';
+            function render() {
+                const item = arr[idx];
+                titleEl.innerText = item.t;
+                textEl.innerText = item.x;
+                boxEl.className = 'modal-content ' + (item.theme || 'theme-default');
+            }
+            render();
+            modal.style.display = 'flex';
+            // Override close button temporarily to navigate or close
+            const closeBtn = document.getElementById('btnCloseLetter');
+            const origOnclick = closeBtn.onclick;
+            closeBtn.innerText = '➡️ Next / Tutup';
+            closeBtn.onclick = function() {
+                idx++;
+                if (idx < arr.length) { render(); }
+                else { modal.style.display = 'none'; closeBtn.innerText = 'Tutup Warkah'; closeBtn.onclick = origOnclick; }
+            };
+        }
+
+        // ===== V2.2 #1 SHARE PICKER (Home Screen entry) =====
+        function openSharePicker() {
+            const list = document.getElementById('sharePickerList');
+            list.innerHTML = '';
+            // Standard letters
+            Object.keys(messagesData).forEach(function(id) {
+                const data = messagesData[id];
+                const title = (data.title && (data.title.ms || data.title.en)) || id;
+                const item = document.createElement('button');
+                item.className = 'share-pick-item';
+                item.innerText = '💌 ' + title;
+                item.onclick = function() {
+                    const link = buildShareLink(id, false);
+                    copyToClipboard(link);
+                    showCopyToast('🔗 Link disalin!');
+                    document.getElementById('sharePickerModal').style.display = 'none';
+                };
+                list.appendChild(item);
+            });
+            // Custom letters
+            let custom = {};
+            try { custom = JSON.parse(localStorage.getItem('customLetters') || '{}'); } catch (e) {}
+            Object.keys(custom).forEach(function(id) {
+                const d = custom[id];
+                const title = (d.title && (d.title.ms || d.title.en)) || id;
+                const item = document.createElement('button');
+                item.className = 'share-pick-item';
+                item.innerText = '✍️ ' + title;
+                item.onclick = function() {
+                    const link = buildShareLink(id, true);
+                    if (link) { copyToClipboard(link); showCopyToast('🔗 Link disalin!'); }
+                    document.getElementById('sharePickerModal').style.display = 'none';
+                };
+                list.appendChild(item);
+            });
+            document.getElementById('sharePickerModal').style.display = 'flex';
+        }
+
         // Hook subtle click sound to key actions
         document.addEventListener('click', function(e) {
             if (e.target.closest('.btn-home, .control-btn, .envelope, .btn-close, .back-link')) {
                 playClickSound();
             }
         });
+
+        // ===== V2.2 #4 MOOD-BASED OPENING =====
+        const MOOD_MAP = {
+            sedih: ['sad', 'cry', 'lonely', 'insecure', 'tired', 'stress', 'overwhelm', 'angry', 'frustrated'],
+            rindu: ['miss', 'distance', 'hug', 'love'],
+            gembira: ['happy', 'love', 'motivation']
+        };
+        const MOOD_LABEL = { sedih: '😢 Sedih', rindu: '🥺 Rindu', gembira: '😊 Gembira' };
+
+        function openMoodPrompt() {
+            const p = document.getElementById('moodPrompt');
+            // Rebuild options to 3 categories
+            p.querySelector('.mood-options').innerHTML =
+                '<div class="mood-opt" onclick="moodSelected(\'sedih\')">😢 Sedih</div>' +
+                '<div class="mood-opt" onclick="moodSelected(\'rindu\')">🥺 Rindu</div>' +
+                '<div class="mood-opt" onclick="moodSelected(\'gembira\')">😊 Gembira</div>';
+            p.style.display = 'flex';
+        }
+
+        function moodSelected(mood) {
+            document.getElementById('moodPrompt').style.display = 'none';
+            showScreen('appScreen');
+            let all = Object.keys(messagesData).map(id => ({ id: id, custom: false }));
+            let custom = {};
+            try { custom = JSON.parse(localStorage.getItem('customLetters') || '{}'); } catch (e) {}
+            Object.keys(custom).forEach(function(id) {
+                if (!custom[id].pass) all.push({ id: id, custom: true });
+            });
+            const kws = MOOD_MAP[mood] || [];
+            let pool = [];
+            all.forEach(function(item) {
+                let title = '';
+                if (item.custom) title = (custom[item.id].title && (custom[item.id].title.ms || custom[item.id].title.en)) || '';
+                else title = (messagesData[item.id].title && (messagesData[item.id].title.ms || messagesData[item.id].title.en)) || '';
+                const hay = (item.id + ' ' + title).toLowerCase();
+                if (kws.some(function(k) { return hay.indexOf(k) >= 0; })) pool.push(item);
+            });
+            if (pool.length > 0) {
+                const match = pool[Math.floor(Math.random() * pool.length)];
+                setTimeout(function() {
+                    if (match.custom) showCustomLetter(custom[match.id], document.createElement('div'), match.id);
+                    else openEnvelope(match.id, null, document.querySelector('[data-id="' + match.id + '"]') || document.createElement('div'));
+                }, 300);
+            } else {
+                v3Surprise();
+            }
+        }
+
+        // ===== V2.2 #5 MYSTERY BOX (PIN gate + exclusive letter) =====
+        function openMystery() {
+            document.getElementById('mysteryPinDialog').style.display = 'flex';
+            const inp = document.getElementById('mysteryPinInput');
+            inp.value = '';
+            document.getElementById('mysteryPinError').innerText = '';
+            setTimeout(function() { inp.focus(); }, 50);
+        }
+
+        function verifyMysteryPin() {
+            const inp = document.getElementById('mysteryPinInput');
+            const err = document.getElementById('mysteryPinError');
+            if (inp.value === SECRET_PIN) {
+                document.getElementById('mysteryPinDialog').style.display = 'none';
+                // Reveal exclusive mystery letter with spin
+                const ov = document.getElementById('mysteryOverlay');
+                const txt = document.getElementById('mysteryText');
+                ov.style.display = 'flex';
+                txt.innerText = '🔓 Unlocking a letter just for you...';
+                setTimeout(function() {
+                    ov.style.display = 'none';
+                    revealMysteryLetter();
+                }, 1600);
+            } else {
+                err.innerText = 'Kod salah. Cuba lagi. 🔒';
+            }
+        }
+
+        function revealMysteryLetter() {
+            // Exclusive mystery letter (hardcoded, only via PIN)
+            const mystery = {
+                title: { ms: 'Open When You Found This Box', en: 'Open When You Found This Box' },
+                text: {
+                    ms: 'Sayang, awak berjaya buka peti misteri ini. Tahukah awak — setiap hari bersama awak adalah hadiah yang tak pernah saya jangka. Terima kasih kerana sentiasa mencari jalan kembali kepada saya. 💛',
+                    en: 'Love, you unlocked this mystery box. Did you know — every day with you is a gift I never expected. Thank you for always finding your way back to me. 💛'
+                },
+                theme: 'theme-happy'
+            };
+            showCustomLetter(mystery, document.createElement('div'), 'mystery_exclusive');
+        }
+
 
     </script>
 </body>
