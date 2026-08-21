@@ -2028,15 +2028,22 @@
                     mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) recChunks.push(e.data); };
                     mediaRecorder.onstop = () => {
                         const blob = new Blob(recChunks, { type: 'audio/webm' });
+                        stream.getTracks().forEach(t => t.stop());
+                        // M2: size guard (localStorage ~5MB; limit voice to 2MB)
+                        if (blob.size > 2 * 1024 * 1024) {
+                            recStatus.textContent = '⚠️ Terlalu panjang (' + Math.round(blob.size/1024/1024*10)/10 + 'MB). Rakam bawah 30s.';
+                            recBtn.style.display = 'inline-block';
+                            recStopBtn.style.display = 'none';
+                            return;
+                        }
                         const reader = new FileReader();
                         reader.onload = () => {
                             window._pendingVoice = reader.result;
                             recPreview.src = reader.result;
                             recPreview.style.display = 'block';
-                            recStatus.textContent = 'Sedia';
+                            recStatus.textContent = 'Sedia (' + Math.round(blob.size/1024) + 'KB)';
                         };
                         reader.readAsDataURL(blob);
-                        stream.getTracks().forEach(t => t.stop());
                     };
                     mediaRecorder.start();
                     recBtn.style.display = 'none';
