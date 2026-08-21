@@ -1323,6 +1323,22 @@
                 <small style="font-size:11px; opacity:0.6;">Kalau awak tak sabar / nak test, masukkan PIN ni untuk buka awal. Kosongkan jika tak perlu.</small>
             </div>
             <div class="setting-item" style="display:block; margin-top:10px;">
+                <label style="font-size:13px;">💊 Time-Capsule (kunci tempoh)</label>
+                <select id="newLetterCapsule" style="width:100%; margin-top:5px; padding:8px; border-radius:8px; border:1px solid #e0a96d; background:#0b132b; color:#fdf0d5;">
+                    <option value="">Tiada (buka ikut tarikh sendiri)</option>
+                    <option value="1825">6 Bulan</option>
+                    <option value="3650">1 Tahun</option>
+                    <option value="7300">2 Tahun</option>
+                </select>
+                <small style="font-size:11px; opacity:0.6;">Pilih tempoh — surat auto-kunci sehingga tarikh tamat.</small>
+            </div>
+            <div class="setting-item" style="display:block; margin-top:10px;">
+                <label style="font-size:13px;">📍 Location-Locked (buka di tempat sahaja)</label>
+                <button type="button" id="capLocBtn" style="background:#3a7bd5; color:#fff; border:none; border-radius:8px; padding:8px 14px; cursor:pointer; font-size:13px; margin-top:5px;">📍 Ambil Lokasi Sekarang</button>
+                <span id="capLocStatus" style="font-size:11px; opacity:0.7; margin-left:6px;"></span>
+                <small style="font-size:11px; opacity:0.6; display:block; margin-top:4px;">Surat hanya boleh buka bila anda berada berdekatan tempat ini.</small>
+            </div>
+            <div class="setting-item" style="display:block; margin-top:10px;">
                 <label style="font-size:13px;">🎤 Rakaman Suara (pilihan, max 30s)</label>
                 <div style="display:flex; gap:8px; align-items:center; margin-top:5px;">
                     <button type="button" id="recBtn" style="background:#b03a48; color:#fff; border:none; border-radius:8px; padding:8px 14px; cursor:pointer; font-size:13px;">● Rakam</button>
@@ -1821,6 +1837,7 @@
             const openDate = document.getElementById('newLetterOpenDate').value;
             const openTime = document.getElementById('newLetterOpenTime').value;
             const unlockPin = document.getElementById('newLetterUnlockPin').value.trim();
+            const capsuleDays = document.getElementById('newLetterCapsule').value;
             const imgInput = document.getElementById('newLetterImg');
             const voiceData = window._pendingVoice || '';
             if (!title || !text) {
@@ -1844,6 +1861,22 @@
                 if (openTime) letter.openTime = openTime;
                 if (unlockPin) letter.unlockPin = unlockPin;
                 if (voiceData) letter.voice = voiceData;
+                // FASA Future: Time-Capsule auto-compute openDate
+                if (capsuleDays && !openDate) {
+                    const d = new Date();
+                    d.setDate(d.getDate() + parseInt(capsuleDays, 10));
+                    const y = d.getFullYear();
+                    const m = String(d.getMonth()+1).padStart(2,'0');
+                    const day = String(d.getDate()).padStart(2,'0');
+                    letter.openDate = y + '-' + m + '-' + day;
+                    letter.capsule = true;
+                }
+                // FASA Future: Location-Locked
+                if (window._pendingLoc) {
+                    letter.lat = window._pendingLoc.lat;
+                    letter.lng = window._pendingLoc.lng;
+                    letter.locationName = window._pendingLoc.name || 'Lokasi';
+                }
                 let custom = JSON.parse(localStorage.getItem('customLetters') || '{}');
                 custom[id] = letter;
                 localStorage.setItem('customLetters', JSON.stringify(custom));
@@ -1910,6 +1943,11 @@
             let custom = JSON.parse(localStorage.getItem('customLetters') || '{}');
             const d = custom[id];
             if (!d) return;
+            // FASA Future: Location-Locked check
+            if (d.lat && d.lng) {
+                checkLocationLock(d, id, element);
+                return;
+            }
             // FASA 1: time-lock check
             if (d.openDate && lockDateTime(d) > new Date()) {
                 showLockModal(d);
@@ -2023,6 +2061,42 @@
         function closePass() {
             document.getElementById('passModal').style.display = 'none';
             document.getElementById('passInput').value = '';
+        }
+
+        // ===== FASA Future: Location-Locked =====
+        function haversine(lat1, lng1, lat2, lng2) {
+            const R = 6371000;
+            const toRad = (x) => x * Math.PI / 180;
+            const dLat = toRad(lat2 - lat1);
+            const dLng = toRad(lng2 - lng1);
+            const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng/2)**2;
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        }
+        function checkLocationLock(d, id, element) {
+            if (!navigator.geolocation) { showLockModal(d); return; }
+            navigator.geolocation.getCurrentPosition((pos) => {
+                const dist = haversine(pos.coords.latitude, pos.coords.longitude, d.lat, d.lng);
+                if (dist <= 100) {
+                    if (d.openDate && lockDateTime(d) > new Date()) { showLockModal(d); return; }
+                    showCustomLetter(d, element, id);
+                } else {
+                    document.getElementById('lockText').innerHTML = '📍 Warkah ini terkunci di lokasi<br><b>' + (d.locationName || 'rahsia') + '</b><br><small>(' + Math.round(dist) + 'm lagi. Pergi ke sana untuk buka.)</small><br><br>💛';
+                    document.getElementById('lockModal').style.display = 'flex';
+                }
+            }, () => { showLockModal(d); }, { enableHighAccuracy: true, timeout: 8000 });
+        }
+        function initLocationCapture() {
+            const btn = document.getElementById('capLocBtn');
+            const status = document.getElementById('capLocStatus');
+            if (!btn) return;
+            btn.onclick = () => {
+                if (!navigator.geolocation) { status.textContent = 'GPS tak sokong'; return; }
+                status.textContent = 'Mengesan...';
+                navigator.geolocation.getCurrentPosition((pos) => {
+                    window._pendingLoc = { lat: pos.coords.latitude, lng: pos.coords.longitude, name: 'Lokasi semasa' };
+                    status.textContent = '✅ Lokasi dirakam';
+                }, () => { status.textContent = 'Ralat GPS'; }, { enableHighAccuracy: true, timeout: 8000 });
+            };
         }
 
         function showCustomLetter(d, element, id) {
@@ -2265,6 +2339,11 @@
             let custom = JSON.parse(localStorage.getItem('customLetters') || '{}');
             const d = custom[id];
             if (!d) return;
+            // FASA Future: Location-Locked check
+            if (d.lat && d.lng) {
+                checkLocationLock(d, id, element);
+                return;
+            }
             // FASA 1: time-lock check
             if (d.openDate && lockDateTime(d) > new Date()) {
                 showLockModal(d);
@@ -3217,6 +3296,8 @@
 
         // FASA 3: init voice recorder
         if (typeof initRecorder === 'function') initRecorder();
+        // FASA Future: init location capture
+        if (typeof initLocationCapture === 'function') initLocationCapture();
 
     </script>
 </body>
