@@ -1827,6 +1827,15 @@
         }
         function closeAddLetter() {
             document.getElementById('addLetterModal').style.display = 'none';
+            // M1: clear pending global state bila tutup (elak leak ke surat seterusnya)
+            window._pendingVoice = '';
+            window._pendingLoc = null;
+            const recPreview = document.getElementById('recPreview');
+            if (recPreview) { recPreview.style.display = 'none'; recPreview.src = ''; }
+            const capLocStatus = document.getElementById('capLocStatus');
+            if (capLocStatus) capLocStatus.textContent = '';
+            const capLocSel = document.getElementById('newLetterCapsule');
+            if (capLocSel) capLocSel.value = '';
         }
 
         function saveCustomLetter() {
@@ -2266,44 +2275,6 @@
         function openAddLetter() {
             document.getElementById('addLetterModal').style.display = 'flex';
         }
-        function closeAddLetter() {
-            document.getElementById('addLetterModal').style.display = 'none';
-        }
-
-        function saveCustomLetter() {
-            const title = document.getElementById('newLetterTitle').value.trim();
-            const text = document.getElementById('newLetterText').value.trim();
-            const pass = document.getElementById('newLetterPass').value;
-            const imgInput = document.getElementById('newLetterImg');
-            if (!title || !text) {
-                alert('Sila isi tajuk dan isi warkah.');
-                return;
-            }
-            const id = 'custom_' + Date.now();
-            let imgData = '';
-            const finish = (img) => {
-                const letter = { title: { ms: title, en: title }, text: { ms: text, en: text }, theme: 'theme-default', custom: true };
-                if (img) letter.img = img;
-                if (pass) letter.pass = pass;
-                let custom = JSON.parse(localStorage.getItem('customLetters') || '{}');
-                custom[id] = letter;
-                localStorage.setItem('customLetters', JSON.stringify(custom));
-                renderCustomLetters();
-                closeAddLetter();
-                document.getElementById('newLetterTitle').value = '';
-                document.getElementById('newLetterText').value = '';
-                document.getElementById('newLetterPass').value = '';
-                imgInput.value = '';
-            };
-            if (imgInput.files && imgInput.files[0]) {
-                const reader = new FileReader();
-                reader.onload = e => finish(e.target.result);
-                reader.readAsDataURL(imgInput.files[0]);
-            } else {
-                finish('');
-            }
-        }
-
         function renderCustomLetters() {
             let custom = JSON.parse(localStorage.getItem('customLetters') || '{}');
             const container = document.getElementById('customLettersContainer');
@@ -2329,108 +2300,6 @@
             });
             sec.appendChild(grid);
             container.appendChild(sec);
-        }
-
-        function lockDateTime(d) {
-            const t = d.openTime || '23:59:59';
-            return new Date((d.openDate || '') + 'T' + t);
-        }
-        function openCustomLetter(id, event, element) {
-            let custom = JSON.parse(localStorage.getItem('customLetters') || '{}');
-            const d = custom[id];
-            if (!d) return;
-            // FASA Future: Location-Locked check
-            if (d.lat && d.lng) {
-                checkLocationLock(d, id, element);
-                return;
-            }
-            // FASA 1: time-lock check
-            if (d.openDate && lockDateTime(d) > new Date()) {
-                showLockModal(d);
-                return;
-            }
-            if (d.pass) {
-                pendingCustomId = id;
-                document.getElementById('passModal').style.display = 'flex';
-                return;
-            }
-            showCustomLetter(d, element, id);
-        }
-
-        function showLockModal(d) {
-            const modal = document.getElementById('lockModal');
-            if (!modal) return;
-            const target = lockDateTime(d);
-            const diff = target - new Date();
-            const days = Math.floor(diff / (1000*60*60*24));
-            const hours = Math.floor((diff % (1000*60*60*24)) / (1000*60*60));
-            const when = d.openDate + (d.openTime ? ' ' + d.openTime : '');
-            let pinBtn = d.unlockPin ? '<button class="btn-close" style="width:100%; float:none; margin-top:10px; background:var(--accent-gold);" onclick="showPinModal(\'' + id + '\')">🔑 Buka Guna PIN</button>' : '';
-            document.getElementById('lockText').innerHTML = '🔒 Warkah ini terkunci sehingga<br><b>' + when + '</b><br><small>(' + days + ' hari ' + hours + ' jam lagi)</small><br><br>Ada warkah menunggu untuk hari istimewa awak 💛' + pinBtn;
-            modal.style.display = 'flex';
-        }
-        function showPinModal(id) {
-            pendingCustomId = id;
-            document.getElementById('pinInput').value = '';
-            document.getElementById('pinModal').style.display = 'flex';
-        }
-        function verifyUnlockPin() {
-            const id = pendingCustomId;
-            let custom = JSON.parse(localStorage.getItem('customLetters') || '{}');
-            const d = custom[id];
-            const pin = document.getElementById('pinInput').value.trim();
-            if (d && d.unlockPin && pin === d.unlockPin) {
-                closeLock();
-                document.getElementById('pinModal').style.display = 'none';
-                const el = document.querySelector('[data-id="' + id + '"]');
-                showCustomLetter(d, el, id);
-            } else {
-                alert('PIN salah.');
-            }
-        }
-        function closeLock() {
-            const modal = document.getElementById('lockModal');
-            if (modal) modal.style.display = 'none';
-        }
-        function closePin() {
-            const modal = document.getElementById('pinModal');
-            if (modal) modal.style.display = 'none';
-        }
-
-
-        let pendingCustomId = null;
-        function verifyPass() {
-            const pass = document.getElementById('passInput').value;
-            let custom = JSON.parse(localStorage.getItem('customLetters') || '{}');
-            const d = custom[pendingCustomId];
-            if (d && d.pass === pass) {
-                closePass();
-                const el = document.querySelector('[data-id="' + pendingCustomId + '"]');
-                showCustomLetter(d, el, pendingCustomId);
-            } else {
-                alert('Kata laluan salah.');
-            }
-        }
-        function closePass() {
-            document.getElementById('passModal').style.display = 'none';
-            document.getElementById('passInput').value = '';
-        }
-
-        function showCustomLetter(d, element, id) {
-            document.getElementById('modalCategoryTitle').innerText = d.title[currentLang] || d.title.ms;
-            let body = d.text[currentLang] || d.text.ms;
-            let html = '<div>' + body.replace(/\n/g, '<br>') + '</div>';
-            if (d.img) html = '<img src="' + d.img + '" style="max-width:100%; border-radius:12px; margin-bottom:15px;"><br>' + html;
-            document.getElementById('modalText').innerHTML = html;
-            if (d.theme === 'theme-happy') playEmotionMusic('happy');
-            else if (d.theme === 'theme-sad' || d.theme === 'theme-miss') playEmotionMusic('sad');
-            const modalBox = document.getElementById('modalBoxTheme');
-            modalBox.className = 'modal-content ' + (d.theme || 'theme-default');
-            document.getElementById('messageModal').style.display = 'flex';
-            element.classList.add('opened');
-            const badge = document.getElementById('badge-' + id);
-            if (badge) badge.innerText = (currentLang === 'ms') ? 'Sudah Dibuka' : 'Opened';
-            localStorage.setItem('envelope_' + id, 'opened');
         }
 
         // ===== BACKGROUND MUSIC PER EMOSI (generated soft instrumental) =====
