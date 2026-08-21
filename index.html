@@ -1322,6 +1322,16 @@
                 <input type="text" id="newLetterUnlockPin" placeholder="perkataan / nombor / pin" style="width:100%; margin-top:5px; padding:8px; border-radius:8px; border:1px solid #e0a96d; background:#0b132b; color:#fdf0d5;">
                 <small style="font-size:11px; opacity:0.6;">Kalau awak tak sabar / nak test, masukkan PIN ni untuk buka awal. Kosongkan jika tak perlu.</small>
             </div>
+            <div class="setting-item" style="display:block; margin-top:10px;">
+                <label style="font-size:13px;">🎤 Rakaman Suara (pilihan, max 30s)</label>
+                <div style="display:flex; gap:8px; align-items:center; margin-top:5px;">
+                    <button type="button" id="recBtn" style="background:#b03a48; color:#fff; border:none; border-radius:8px; padding:8px 14px; cursor:pointer; font-size:13px;">● Rakam</button>
+                    <button type="button" id="recStopBtn" style="background:#6c757d; color:#fff; border:none; border-radius:8px; padding:8px 14px; cursor:pointer; font-size:13px; display:none;">■ Stop</button>
+                    <span id="recStatus" style="font-size:11px; opacity:0.7;"></span>
+                </div>
+                <audio id="recPreview" controls style="display:none; width:100%; margin-top:8px;"></audio>
+                <small style="font-size:11px; opacity:0.6;">Rakam pesanan suara pendek. Akan disimpan dalam surat.</small>
+            </div>
             <button class="btn-close" id="saveCustomBtn" style="width:100%; float:none; margin-top:10px; background:var(--accent-gold);" onclick="saveCustomLetter()">Simpan Warkah</button>
             <button class="btn-close" style="width:100%; float:none; margin-top:8px; background:#6c757d;" onclick="closeAddLetter()">Batal</button>
         </div>
@@ -1812,6 +1822,7 @@
             const openTime = document.getElementById('newLetterOpenTime').value;
             const unlockPin = document.getElementById('newLetterUnlockPin').value.trim();
             const imgInput = document.getElementById('newLetterImg');
+            const voiceData = window._pendingVoice || '';
             if (!title || !text) {
                 alert('Sila isi tajuk dan isi warkah.');
                 return;
@@ -1832,6 +1843,7 @@
                 if (openDate) letter.openDate = openDate;
                 if (openTime) letter.openTime = openTime;
                 if (unlockPin) letter.unlockPin = unlockPin;
+                if (voiceData) letter.voice = voiceData;
                 let custom = JSON.parse(localStorage.getItem('customLetters') || '{}');
                 custom[id] = letter;
                 localStorage.setItem('customLetters', JSON.stringify(custom));
@@ -1843,6 +1855,12 @@
                 document.getElementById('newLetterPass').value = '';
                 document.getElementById('newLetterMood').value = 'default';
                 imgInput.value = '';
+                window._pendingVoice = '';
+                const recPreview = document.getElementById('recPreview');
+                if (recPreview) { recPreview.style.display = 'none'; recPreview.src = ''; }
+                document.getElementById('newLetterUnlockPin').value = '';
+                document.getElementById('newLetterOpenDate').value = '';
+                document.getElementById('newLetterOpenTime').value = '';
             };
             if (imgInput.files && imgInput.files[0]) {
                 const reader = new FileReader();
@@ -1945,6 +1963,51 @@
             if (modal) modal.style.display = 'none';
         }
 
+        // ===== FASA 3: Voice Note Record =====
+        let mediaRecorder = null;
+        let recChunks = [];
+        let recTimer = null;
+        function initRecorder() {
+            const recBtn = document.getElementById('recBtn');
+            const recStopBtn = document.getElementById('recStopBtn');
+            const recStatus = document.getElementById('recStatus');
+            const recPreview = document.getElementById('recPreview');
+            if (!recBtn) return;
+            recBtn.onclick = async () => {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    recChunks = [];
+                    mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) recChunks.push(e.data); };
+                    mediaRecorder.onstop = () => {
+                        const blob = new Blob(recChunks, { type: 'audio/webm' });
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                            window._pendingVoice = reader.result;
+                            recPreview.src = reader.result;
+                            recPreview.style.display = 'block';
+                            recStatus.textContent = 'Sedia';
+                        };
+                        reader.readAsDataURL(blob);
+                        stream.getTracks().forEach(t => t.stop());
+                    };
+                    mediaRecorder.start();
+                    recBtn.style.display = 'none';
+                    recStopBtn.style.display = 'inline-block';
+                    recStatus.textContent = 'Merakam... (max 30s)';
+                    recTimer = setTimeout(() => { if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop(); }, 30000);
+                } catch (e) {
+                    recStatus.textContent = 'Ralat: ' + (e.message || 'mic ditolak');
+                }
+            };
+            recStopBtn.onclick = () => {
+                if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+                clearTimeout(recTimer);
+                recBtn.style.display = 'inline-block';
+                recStopBtn.style.display = 'none';
+            };
+        }
+
         function verifyPass() {
             const pass = document.getElementById('passInput').value;
             let custom = JSON.parse(localStorage.getItem('customLetters') || '{}');
@@ -1970,6 +2033,7 @@
                 let body = (d.text[currentLang] || d.text.ms).replace(/\n/g, '<br>');
                 let html = '<div>' + body + '</div>';
                 if (d.img) html = '<img src="' + d.img + '" style="max-width:100%; border-radius:12px; margin-bottom:15px;"><br>' + html;
+                if (d.voice) html = '<audio controls src="' + d.voice + '" style="width:100%; margin-bottom:15px;"></audio><br>' + html;
                 if (d.created) html += '<p style="font-size:11px; opacity:0.5; margin-top:10px;">✍️ Ditulis: ' + d.created + '</p>';
                 html += '<div style="margin-top:15px; display:flex; gap:10px;">' +
                     '<button class="btn-close" style="background:#3a7bd5; float:none;" onclick="editCustomLetter(\'' + id + '\')">✏️ Edit</button>' +
@@ -2253,6 +2317,7 @@
             const modal = document.getElementById('pinModal');
             if (modal) modal.style.display = 'none';
         }
+
 
         let pendingCustomId = null;
         function verifyPass() {
@@ -3150,6 +3215,8 @@
             showCustomLetter(mystery, document.createElement('div'), 'mystery_exclusive');
         }
 
+        // FASA 3: init voice recorder
+        if (typeof initRecorder === 'function') initRecorder();
 
     </script>
 </body>
