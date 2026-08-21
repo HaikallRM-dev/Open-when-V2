@@ -357,6 +357,7 @@
         #env3d.open .env3d-letter { transform: translateY(-36px); opacity: 1; }
         @media (prefers-reduced-motion: reduce) {
             .env3d-flap, .env3d-letter, .env3d-wrap { transition: none; animation: none; }
+            #capLocBtn, #recBtn { transition: none; }
         }
 
         @keyframes floatUpParticle {
@@ -1336,6 +1337,7 @@
                 <label style="font-size:13px;">📍 Location-Locked (buka di tempat sahaja)</label>
                 <button type="button" id="capLocBtn" style="background:#3a7bd5; color:#fff; border:none; border-radius:8px; padding:8px 14px; cursor:pointer; font-size:13px; margin-top:5px;">📍 Ambil Lokasi Sekarang</button>
                 <span id="capLocStatus" style="font-size:11px; opacity:0.7; margin-left:6px;"></span>
+                <input type="text" id="newLetterLocName" placeholder="Nama tempat (cth: Taman Tasik)" style="width:100%; margin-top:6px; padding:8px; border-radius:8px; border:1px solid #e0a96d; background:#0b132b; color:#fdf0d5; font-size:13px;">
                 <small style="font-size:11px; opacity:0.6; display:block; margin-top:4px;">Surat hanya boleh buka bila anda berada berdekatan tempat ini.</small>
             </div>
             <div class="setting-item" style="display:block; margin-top:10px;">
@@ -2089,7 +2091,11 @@
             return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
         }
         function checkLocationLock(d, id, element) {
-            if (!navigator.geolocation) { showLockModal(d); return; }
+            if (!navigator.geolocation) {
+                document.getElementById('lockText').innerHTML = '📍 Warkah ini terkunci di lokasi<br><b>' + (d.locationName || 'rahsia') + '</b><br><small>(Peranti tak sokong GPS. Tak boleh buka dari sini.)</small><br><br>💛';
+                document.getElementById('lockModal').style.display = 'flex';
+                return;
+            }
             navigator.geolocation.getCurrentPosition((pos) => {
                 const dist = haversine(pos.coords.latitude, pos.coords.longitude, d.lat, d.lng);
                 if (dist <= 100) {
@@ -2099,19 +2105,28 @@
                     document.getElementById('lockText').innerHTML = '📍 Warkah ini terkunci di lokasi<br><b>' + (d.locationName || 'rahsia') + '</b><br><small>(' + Math.round(dist) + 'm lagi. Pergi ke sana untuk buka.)</small><br><br>💛';
                     document.getElementById('lockModal').style.display = 'flex';
                 }
-            }, () => { showLockModal(d); }, { enableHighAccuracy: true, timeout: 8000 });
+            }, (err) => {
+                // M3: explain GPS fail
+                const msg = (err && err.code === 1) ? 'Akses lokasi ditolak.' : (err && err.code === 3) ? 'GPS timeout.' : 'Lokasi tak dapat dikesan.';
+                document.getElementById('lockText').innerHTML = '🔒 ' + msg + '<br><small>(Warkah terkunci di lokasi: <b>' + (d.locationName || 'rahsia') + '</b>)</small><br><br>💛';
+                document.getElementById('lockModal').style.display = 'flex';
+            }, { enableHighAccuracy: true, timeout: 8000 });
         }
         function initLocationCapture() {
             const btn = document.getElementById('capLocBtn');
             const status = document.getElementById('capLocStatus');
+            const nameInput = document.getElementById('newLetterLocName');
             if (!btn) return;
             btn.onclick = () => {
                 if (!navigator.geolocation) { status.textContent = 'GPS tak sokong'; return; }
                 status.textContent = 'Mengesan...';
                 navigator.geolocation.getCurrentPosition((pos) => {
-                    window._pendingLoc = { lat: pos.coords.latitude, lng: pos.coords.longitude, name: 'Lokasi semasa' };
-                    status.textContent = '✅ Lokasi dirakam';
-                }, () => { status.textContent = 'Ralat GPS'; }, { enableHighAccuracy: true, timeout: 8000 });
+                    const nm = (nameInput && nameInput.value.trim()) || 'Lokasi semasa';
+                    window._pendingLoc = { lat: pos.coords.latitude, lng: pos.coords.longitude, name: nm };
+                    status.textContent = '✅ Lokasi dirakam: ' + nm;
+                }, (e) => {
+                    status.textContent = 'Ralat GPS' + (e && e.code === 1 ? ' (ditolak)' : '');
+                }, { enableHighAccuracy: true, timeout: 8000 });
             };
         }
 
